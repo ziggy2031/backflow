@@ -27,6 +27,10 @@ jobs:
           BUBBLEWRAP_KEYSTORE_PASSWORD: backflow1
           BUBBLEWRAP_KEY_PASSWORD: backflow1
         run: yes | bubblewrap build --skipPwaValidation
+      - name: Show signing fingerprint
+        run: |
+          AS=$(ls -d $ANDROID_HOME/build-tools/*/apksigner | tail -1)
+          $AS verify --print-certs app-release-signed.apk | grep -i "SHA-256"
       - uses: actions/upload-artifact@v4
         with:
           name: backflow-apk
