@@ -18,8 +18,10 @@ jobs:
         run: |
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
-      - name: Make signing key
-        run: keytool -genkeypair -v -keystore android.keystore -alias backflow -storepass backflow1 -keypass backflow1 -dname "CN=Colin Bell Plumbing" -keyalg RSA -keysize 2048 -validity 10000
+      - name: Restore signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: echo "$KEYSTORE_B64" | base64 -d > android.keystore
       - name: Build
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: backflow1
