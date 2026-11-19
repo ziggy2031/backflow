@@ -28,7 +28,7 @@
   "isChromeOSOnly": false,
   "isMetaQuest": false,
   "fullScopeUrl": "https://ziggy2031.github.io/backflow/",
-  "minSdkVersion": 21,
+  "minSdkVersion": 24,
   "orientation": "default",
   "additionalTrustedOrigins": [],
   "retainedBundles": []
