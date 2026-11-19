@@ -62,10 +62,10 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 @page{size:A4;margin:0}
 @media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v0.4</small></div><span id="msg"></span><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v0.5</small></div><span id="msg"></span><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
 <nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button></nav>
-<section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bFill" hidden>🔧 Fill connection types</button><button id="bRef">Refresh</button></div>
+<section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
 <table><thead><tr><th>Date</th><th>Address</th><th>Use</th><th>Type</th><th>Serial</th><th>Result</th></tr></thead><tbody id="rows"></tbody></table></section>
 <section id="mapPg" hidden><div class="bar"><span id="mapMsg" style="color:var(--mu);font-size:13px"></span><span style="font-size:13px">🟢 OK &nbsp;🟠 due ≤60 days &nbsp;🔴 failed &nbsp;🔵 no result</span><button id="mapRetry">Retry unlocated</button></div><div id="mapbox"></div></section>
 <section id="gaugePg" hidden><div class="sec" style="max-width:700px"><h4>🧪 Test gauge</h4><p style="margin:0 0 12px;color:var(--mu);font-size:13px">Used for every new test. Old certificates keep the gauge they were tested with.</p>
@@ -123,7 +123,7 @@ async function load(){say('Loading…');try{
  try{const g=await api(`${S}${CFG.sheet}/values/Gauge!A2:C2`);const x=g.values[0];gauge={Gauge:x[0],GaugeSerial:x[1],GaugeDateTested:y4(x[2])}}catch(e){}
  const brands=[...new Set(recs.map(r=>r.v.Brand).filter(Boolean))].sort();$('#dl-b').innerHTML=brands.map(b=>`<option>${esc(b)}`).join('');
  say(recs.length+' records');draw();loadClients().catch(()=>{})}catch(e){say(e.message)}}
-function draw(){$('#bFill').hidden=!recs.some(r=>!r.v['Connection Type']);const q=$('#q').value.toLowerCase();
+function draw(){const q=$('#q').value.toLowerCase();
  const L=recs.filter(r=>!q||Object.values(r.v).join(' ').toLowerCase().includes(q)).sort((a,b)=>pd(b.v.Date)-pd(a.v.Date)||b.row-a.row).slice(0,300);
  $('#rows').innerHTML=L.map(r=>`<tr data-r="${r.row}"><td>${esc(r.v.Date)}<td>${esc(r.v.Address)}<td>${esc(r.v['Device Use'])}<td>${esc(r.v.Type)}<td>${esc((r.v['Serial #']||'').toUpperCase())}<td><span class="pill ${(r.v.Result||'').toLowerCase()}">${esc(r.v.Result)}</span>`).join('')
  const nd=dueList(60,false).length,now=new Date(),mo=recs.filter(r=>{const d=pd(r.v.Date);return d.getMonth()==now.getMonth()&&d.getFullYear()==now.getFullYear()}).length,yr=recs.filter(r=>pd(r.v.Date).getFullYear()==now.getFullYear()),fl=yr.filter(r=>r.v.Result=='FAIL').length;
@@ -354,6 +354,6 @@ $('#bSW').onclick=()=>openSW();$('#swBack').onclick=()=>show('form');
 $('#sw').onclick=e=>{const b=e.target.closest('button');if(!b)return;const t=b.dataset.cpid?$('#'+b.dataset.cpid).value:b.dataset.cp;
  if(b.dataset.cpid){swMake[getF('Brand')]=t;localStorage.setItem('bf_make',JSON.stringify(swMake))}
  navigator.clipboard.writeText(t).then(()=>{const o=b.textContent;b.textContent='✔ Copied';b.classList.add('done');setTimeout(()=>{b.textContent=o;b.classList.remove('done')},1200)}).catch(()=>alert('Copy failed – select the text and press Ctrl+C'))};
-$('#bFill').onclick=openFill;$('#fBack').onclick=()=>show('list');$('#fSave').onclick=saveFill;$('#fRows').onchange=e=>{if(e.target.dataset.fr){fillMap[e.target.dataset.fr]=e.target.value;fillSum()}};
+$('#fBack').onclick=()=>show('list');$('#fSave').onclick=saveFill;$('#fRows').onchange=e=>{if(e.target.dataset.fr){fillMap[e.target.dataset.fr]=e.target.value;fillSum()}};
 build();show('list');if(gotToken())load();if(!CFG.client)say('Click Settings → paste your OAuth Client ID, then Sign in');
 </script></body></html>
