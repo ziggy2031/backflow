@@ -21,7 +21,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:rgba(47,123,208,.1)}
 .seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}.seg button.on.f{background:var(--bad);border-color:var(--bad)}
 .bar{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}.bar input{max-width:360px}
 .pass{color:var(--ok);font-weight:600}.fail{color:var(--bad);font-weight:600}
-#msg{font-size:13px;color:var(--mu)}
+#msg{font-size:13px;color:var(--mu)}header #bPend{background:#e6a117;border-color:#e6a117;color:#fff;font-weight:600}
 #rep{background:#fff;color:#000;padding:15mm;max-width:210mm;margin:0 auto;font:13px/1.25 Arial,Helvetica,sans-serif}
 #rep .hd{display:flex;justify-content:space-between;align-items:center;text-align:center}#rep .hd img{height:85px;width:170px;object-fit:contain}#rep .hd img.l{object-position:left center}#rep .hd img.r{object-position:right center}
 #rep h3{text-align:center;text-decoration:underline;margin:22px 0 14px;font-size:14px}#rep .sig{height:38px}#rep .ph{max-height:55mm;max-width:75mm;margin-top:6px}
@@ -62,7 +62,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 @page{size:A4;margin:0}
 @media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v0.6</small></div><span id="msg"></span><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v0.7</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
 <nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button></nav>
 <section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
@@ -102,30 +102,83 @@ const fd=d=>String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padSt
 const toISO=s=>{const d=pd(s);return d.getTime()?d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'):''};
 const fromISO=s=>{const[a,b,c]=s.split('-');return a?`${c}/${b}/${a}`:''};
 // ---- google
-function auth(cb){if(!CFG.client){alert('Set your Google OAuth Client ID in Settings first.');return}
- const native=!!window.bfNative;
- const u='https://accounts.google.com/o/oauth2/v2/auth?'+new URLSearchParams({client_id:CFG.client,redirect_uri:location.origin+(native?'/':location.pathname),response_type:'token',
-  scope:'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive',include_granted_scopes:'true',prompt:'select_account',state:native?'native':'web'});
+let tokExp=0;
+const rt=()=>localStorage.getItem('bf_rt');
+const isNet=e=>e instanceof TypeError||/Failed to fetch|NetworkError|Load failed|network/i.test((e&&e.message)||'');
+const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+async function auth(){if(!CFG.client){alert('Set your Google OAuth Client ID in Settings first.');return}
+ const native=!!window.bfNative,redir=location.origin+(native?'/':location.pathname),scope='https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive';let q;
+ if(CFG.secret&&!native){const ver=b64u(crypto.getRandomValues(new Uint8Array(48)));localStorage.setItem('bf_pkce',ver);
+  const ch=b64u(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ver)));
+  q={client_id:CFG.client,redirect_uri:redir,response_type:'code',scope,access_type:'offline',prompt:'select_account consent',code_challenge:ch,code_challenge_method:'S256',state:'code'}}
+ else q={client_id:CFG.client,redirect_uri:redir,response_type:'token',scope,include_granted_scopes:'true',prompt:'select_account',state:native?'native':'web'};
+ const u='https://accounts.google.com/o/oauth2/v2/auth?'+new URLSearchParams(q);
  if(native)window.bfNative.openAuth(u);else location.href=u}
+function setTok(t,sec){tok=t;tokExp=Date.now()+sec*1000;sessionStorage.setItem('bf_tok',t);sessionStorage.setItem('bf_exp',tokExp);$('#bIn').textContent='Signed in'}
+async function tokenCall(p){const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(Object.assign({client_id:CFG.client,client_secret:CFG.secret},p))});
+ const j=await r.json().catch(()=>({}));if(!r.ok){if(j.error=='invalid_grant')localStorage.removeItem('bf_rt');throw Error(j.error=='invalid_grant'?'Session expired – click Sign in':(j.error_description||j.error||'Sign-in failed'))}return j}
+async function refreshTok(){if(!rt()||!CFG.secret)throw Error('Not signed in');const j=await tokenCall({grant_type:'refresh_token',refresh_token:rt()});setTok(j.access_token,j.expires_in||3600)}
+async function ensureTok(){if(tok&&Date.now()<tokExp-30000)return;if(rt()&&CFG.secret)await refreshTok()}
+async function finishCode(){const p=new URLSearchParams(location.search);
+ if(p.get('error')&&p.get('state')=='code'){history.replaceState(null,'',location.pathname);alert('Google says: '+p.get('error'));return}
+ if(!p.get('code')||p.get('state')!='code')return;const code=p.get('code');history.replaceState(null,'',location.pathname);
+ try{const j=await tokenCall({grant_type:'authorization_code',code,redirect_uri:location.origin+location.pathname,code_verifier:localStorage.getItem('bf_pkce')||''});
+  setTok(j.access_token,j.expires_in||3600);if(j.refresh_token)localStorage.setItem('bf_rt',j.refresh_token);localStorage.removeItem('bf_pkce')}catch(e){alert('Sign-in failed: '+e.message)}}
 function gotToken(){const h=new URLSearchParams(location.hash.slice(1));
  if(h.get('state')=='native'&&h.get('access_token')&&!window.bfNative){fetch('/__tok',{method:'POST',body:JSON.stringify({t:h.get('access_token'),e:+h.get('expires_in')||3600})}).finally(()=>{document.body.innerHTML='<div style="font:20px system-ui;padding:40px;text-align:center">✔ Signed in.<br>You can close this tab and go back to the Backflow app.</div>'});return false}
  if(window.bfNative&&window.bfNative.token){const t=window.bfNative.token();if(t){sessionStorage.setItem('bf_tok',t.t);sessionStorage.setItem('bf_exp',t.x)}}
  if(h.get('access_token')){sessionStorage.setItem('bf_tok',h.get('access_token'));sessionStorage.setItem('bf_exp',Date.now()+(+h.get('expires_in')||3600)*1000)}
  else if(h.get('error')){alert('Google says: '+h.get('error'))}
  if(location.hash)history.replaceState(null,'',location.pathname);
- if(sessionStorage.getItem('bf_tok')&&Date.now()<+sessionStorage.getItem('bf_exp')){tok=sessionStorage.getItem('bf_tok');$('#bIn').textContent='Signed in';return true}}
-async function api(url,opt={}){if(!tok)throw Error('Not signed in');opt.headers=Object.assign({Authorization:'Bearer '+tok},opt.headers||{});
- const r=await fetch(url,opt);if(r.status==401){tok='';throw Error('Session expired – click Sign in')}if(!r.ok)throw Error((await r.text()).slice(0,300));return r.json()}
+ if(sessionStorage.getItem('bf_tok')&&Date.now()<+sessionStorage.getItem('bf_exp')){tok=sessionStorage.getItem('bf_tok');tokExp=+sessionStorage.getItem('bf_exp');$('#bIn').textContent='Signed in';return true}}
+async function api(url,opt={}){await ensureTok();if(!tok)throw Error('Not signed in');
+ const go=()=>{const o=Object.assign({},opt);o.headers=Object.assign({Authorization:'Bearer '+tok},opt.headers||{});return fetch(url,o)};
+ let r=await go();if(r.status==401&&rt()&&CFG.secret){await refreshTok();r=await go()}
+ if(r.status==401){tok='';throw Error('Session expired – click Sign in')}if(!r.ok)throw Error((await r.text()).slice(0,300));return r.json()}
 const S='https://sheets.googleapis.com/v4/spreadsheets/';
+// ---- offline queue (saves wait here until Google is reachable)
+let _db;const idb=()=>_db||(_db=new Promise((res,rej)=>{const r=indexedDB.open('bf',1);r.onupgradeneeded=()=>r.result.createObjectStore('q',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+const qx=async(m,f)=>{const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('q',m),r=f(t.objectStore('q'));t.oncomplete=()=>res(r.result);t.onerror=()=>rej(t.error)})};
+const qAll=()=>qx('readonly',s=>s.getAll()),qPut=it=>qx('readwrite',s=>s.put(it)),qDel=id=>qx('readwrite',s=>s.delete(id));
+async function pendUI(){const Q=await qAll().catch(()=>[]),b=$('#bPend');b.hidden=!Q.length;b.textContent=(Q.some(x=>x.err)?'⚠ ':'⏳ ')+Q.length+' to sync'}
+async function overlay(){const Q=await qAll().catch(()=>[]);Q.forEach(it=>{const rec={row:it.row>0?it.row:-it.id,v:it.v,pending:1};const i=recs.findIndex(r=>r.row==rec.row);i<0?recs.push(rec):recs[i]=rec});pendUI()}
+function cacheSave(){try{localStorage.setItem('bf_cache',JSON.stringify({recs,gauge,t:Date.now()}))}catch(e){}}
+async function loadCache(e){try{const c=JSON.parse(localStorage.getItem('bf_cache')||'null');if(!c)return false;recs=c.recs||[];gauge=c.gauge||{};
+ try{cl=JSON.parse(localStorage.getItem('bf_cl')||'[]');drawCl()}catch(x){}
+ const brands=[...new Set(recs.map(r=>r.v.Brand).filter(Boolean))].sort();$('#dl-b').innerHTML=brands.map(b=>`<option>${esc(b)}`).join('');
+ await overlay();draw();say((e&&!isNet(e)?'Not signed in':'Offline')+' – saved copy from '+new Date(c.t).toLocaleString('en-AU',{dateStyle:'short',timeStyle:'short'}));return true}catch(x){return false}}
+let syncing=false,again=false;
+async function sync(){if(syncing){again=true;return}syncing=true;let done=0,why='';
+ try{const Q=(await qAll()).sort((a,b)=>a.id-b.id);if(!Q.length||!navigator.onLine)return;say('Syncing…');
+  for(const it of Q){
+   try{await ensureTok();if(!tok){why='Not signed in';break}
+    if(it.img){const n=it.imgName||`${fd(new Date()).replace(/\//g,'')}.Image.${Date.now()}.jpg`,b='bfb'+Date.now();
+     const body=new Blob([`--${b}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify({name:n,parents:[CFG.folder]})}\r\n--${b}\r\nContent-Type: ${it.img.type||'image/jpeg'}\r\n\r\n`,it.img,`\r\n--${b}--`]);
+     await api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body});it.v.Image=`${CFG.imgdir}/${n}`;it.img=null;await qPut(it)}
+    const row=[H.map(k=>it.v[k])];
+    if(it.row>0){
+     if(it.key){const g=await api(`${S}${CFG.sheet}/values/Sheet1!A${it.row}:AJ${it.row}`),x=(g.values||[[]])[0]||[];
+      const k=[x[H.indexOf('Date')],x[H.indexOf('Address')],x[H.indexOf('Serial #')]].map(z=>z??'').join('|');
+      if(k!=it.key){it.err='That row has changed in the sheet, so I did not overwrite it.';await qPut(it);continue}}
+     await api(`${S}${CFG.sheet}/values/Sheet1!A${it.row}:AJ${it.row}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:row})})}
+    else await api(`${S}${CFG.sheet}/values/Sheet1!A1:AJ:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:row})});
+    await qDel(it.id);done++
+   }catch(e){if(isNet(e)){why='offline';break}if(/Session expired|Not signed in/.test(e.message)){why=e.message;break}it.err=e.message;await qPut(it)}}
+ }finally{syncing=false}
+ await pendUI();
+ if(done){toast('Synced ✔ '+done+' test'+(done>1?'s':''));await load()}
+ else if(why)say(why=='offline'?'Offline – will sync when you have signal':why);
+ if(again){again=false;return sync()}}
 async function load(){say('Loading…');try{
  const d=await api(`${S}${CFG.sheet}/values/Sheet1!A1:AJ?valueRenderOption=FORMATTED_VALUE`);
  recs=d.values.slice(1).map((r,i)=>({row:i+2,v:Object.fromEntries(H.map((h,j)=>[h,r[j]??'']))})).filter(r=>r.v.Address||r.v.Date);
  try{const g=await api(`${S}${CFG.sheet}/values/Gauge!A2:C2`);const x=g.values[0];gauge={Gauge:x[0],GaugeSerial:x[1],GaugeDateTested:y4(x[2])}}catch(e){}
+ cacheSave();await overlay();
  const brands=[...new Set(recs.map(r=>r.v.Brand).filter(Boolean))].sort();$('#dl-b').innerHTML=brands.map(b=>`<option>${esc(b)}`).join('');
- say(recs.length+' records');draw();loadClients().catch(()=>{})}catch(e){say(e.message)}}
+ say(recs.length+' records');draw();loadClients().catch(()=>{})}catch(e){if(isNet(e)||/Session expired|Not signed in/.test(e.message)){if(!(await loadCache(e)))say(e.message)}else say(e.message)}}
 function draw(){const q=$('#q').value.toLowerCase();
  const L=recs.filter(r=>!q||Object.values(r.v).join(' ').toLowerCase().includes(q)).sort((a,b)=>pd(b.v.Date)-pd(a.v.Date)||b.row-a.row).slice(0,300);
- $('#rows').innerHTML=L.map(r=>`<tr data-r="${r.row}"><td>${esc(r.v.Date)}<td>${esc(r.v.Address)}<td>${esc(r.v['Device Use'])}<td>${esc(r.v.Type)}<td>${esc((r.v['Serial #']||'').toUpperCase())}<td><span class="pill ${(r.v.Result||'').toLowerCase()}">${esc(r.v.Result)}</span>`).join('')
+ $('#rows').innerHTML=L.map(r=>`<tr data-r="${r.row}"><td>${r.pending?'⏳ ':''}${esc(r.v.Date)}<td>${esc(r.v.Address)}<td>${esc(r.v['Device Use'])}<td>${esc(r.v.Type)}<td>${esc((r.v['Serial #']||'').toUpperCase())}<td><span class="pill ${(r.v.Result||'').toLowerCase()}">${esc(r.v.Result)}</span>`).join('')
  const nd=dueList(60,false).length,now=new Date(),mo=recs.filter(r=>{const d=pd(r.v.Date);return d.getMonth()==now.getMonth()&&d.getFullYear()==now.getFullYear()}).length,yr=recs.filter(r=>pd(r.v.Date).getFullYear()==now.getFullYear()),fl=yr.filter(r=>r.v.Result=='FAIL').length;
  $('#stats').innerHTML=`<div><b>${recs.length}</b><span>Total tests</span></div><div><b>${yr.length}</b><span>This year</span></div><div><b>${mo}</b><span>This month</span></div><div class="${fl?'bad':'ok'}"><b>${fl}</b><span>Fails this year</span></div><div class="amb" id="sdue" style="cursor:pointer"><b>${nd}</b><span>Due in 60 days</span></div>`;$('#dueN').textContent=nd;$('#dueN').style.display=nd?'':'none';$('#sdue').onclick=()=>{show('due');drawDue()}}
 // ---- form
@@ -185,21 +238,23 @@ function open(rec,copy){cur=copy?{row:0,v:{...rec.v}}:rec;const v=cur.v;H.forEac
  if(copy){KEEP_CLEAR.forEach(k=>{if(k!='Image')setF(k,'')});setF('Date',fd(new Date()));for(const k in gauge)setF(k,gauge[k]);cur.v.Image=''}
  if(!rec.row&&!copy){for(const k in gauge)setF(k,gauge[k]);setF('Date',fd(new Date()));setF('Test Type','Annual');setF('Strainer','YES')}
  $('#img').value='';$('#imgn').textContent=cur.v.Image||'';vis();$('#bDel').hidden=!cur.row;show('form');scrollTo(0,0)}
-async function save(){say('Saving…');try{if(!tok)throw Error('Not signed in – click Sign in');const v={};H.forEach(k=>v[k]=k=='Image'?cur.v.Image||'':k=='Dummy'?'0':(k=='Meter #'||k=='Bypass Meter No.'||k=='Serial #')?getF(k).toUpperCase():getF(k));
+async function save(){say('Saving…');try{const v={};H.forEach(k=>v[k]=k=='Image'?cur.v.Image||'':k=='Dummy'?'0':(k=='Meter #'||k=='Bypass Meter No.'||k=='Serial #')?getF(k).toUpperCase():getF(k));
  for(const k of ['Date','Address','Property #','Type']) if(!v[k])throw Error(k+' is required');
- const f=$('#img').files[0];if(f){const n=`${fd(new Date()).replace(/\//g,'')}.Image.${Date.now()}.jpg`;const b='bfb'+Date.now();
-  const body=new Blob([`--${b}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify({name:n,parents:[CFG.folder]})}\r\n--${b}\r\nContent-Type: ${f.type}\r\n\r\n`,f,`\r\n--${b}--`]);
-  await api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body});v.Image=`${CFG.imgdir}/${n}`}
- const row=[H.map(k=>v[k])];
- if(cur.row){await api(`${S}${CFG.sheet}/values/Sheet1!A${cur.row}:AJ${cur.row}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:row})});cur.v=v}
- else{const r=await api(`${S}${CFG.sheet}/values/Sheet1!A1:AJ:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:row})});
-  const m=r.updates.updatedRange.match(/(\d+):/);cur={row:+m[1],v};}
- const i=recs.findIndex(r=>r.row==cur.row);i<0?recs.push(cur):recs[i]=cur;toast('Saved ✔ row '+cur.row);$('#img').value='';draw();show('list')}catch(e){say('');alert('Save failed: '+e.message)}}
-async function delT(){if(!cur.row)return;const v=cur.v||{};const d=[v.Date,v.Address,v['Serial #']].filter(Boolean).join(' · ');
+ const f=$('#img').files[0],Q=await qAll();let it=cur.row<0?Q.find(x=>x.id==-cur.row):cur.row>0?Q.find(x=>x.row==cur.row):null;
+ if(!it)it={row:Math.max(cur.row,0),key:cur.row>0?[cur.v.Date,cur.v.Address,cur.v['Serial #']].map(z=>z??'').join('|'):''};
+ it.v=v;delete it.err;if(f){it.img=f;it.imgName=`${fd(new Date()).replace(/\//g,'')}.Image.${Date.now()}.jpg`}
+ const id=await qPut(it);if(!it.id)it.id=id;
+ const nr=cur.row>0?cur.row:-it.id,rec={row:nr,v,pending:1},i=recs.findIndex(r=>r.row==nr);i<0?recs.push(rec):recs[i]=rec;cur=rec;
+ $('#img').value='';draw();await pendUI();show('list');say('');
+ await sync();
+ const left=(await qAll()).find(x=>x.id==it.id);
+ if(!left)toast('Saved ✔');else if(left.err)alert('Saved on your phone, but Google said no:\n'+left.err);else toast('📱 Saved on phone – will sync when you have signal')}catch(e){say('');alert('Save failed: '+e.message)}}
+async function delT(){if(!cur.row)return;
+ if(cur.row<0){if(!confirm('Discard this test that has not synced yet?'))return;await qDel(-cur.row);recs=recs.filter(r=>r.row!=cur.row);draw();await pendUI();toast('Discarded');show('list');return}const v=cur.v||{};const d=[v.Date,v.Address,v['Serial #']].filter(Boolean).join(' · ');
  if(!confirm('Delete this test?\n\n'+d+'\n\nThis removes the row from your Google Sheet and cannot be undone.'))return;
  try{say('Deleting…');const m=await api(`${S}${CFG.sheet}?fields=sheets.properties(sheetId,title)`);const sh=m.sheets.find(x=>x.properties.title=='Sheet1')||m.sheets[0];
  await api(`${S}${CFG.sheet}:batchUpdate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requests:[{deleteDimension:{range:{sheetId:sh.properties.sheetId,dimension:'ROWS',startIndex:cur.row-1,endIndex:cur.row}}}]})});
- toast('Deleted');await load();show('list')}catch(e){say('');alert('Delete failed: '+e.message)}}
+ for(const x of await qAll())if(x.row==cur.row)await qDel(x.id);toast('Deleted');await load();show('list')}catch(e){say('');alert(isNet(e)?'Delete needs a signal – try again when you are online.':'Delete failed: '+e.message)}}
 function toast(t){let d=$('#toast');if(!d){d=document.createElement('div');d.id='toast';d.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1d8a4a;color:#fff;padding:14px 28px;border-radius:8px;font-size:18px;z-index:99';document.body.appendChild(d)}d.textContent=t;d.style.display='block';setTimeout(()=>d.style.display='none',2500)}
 // ---- report
 async function photo(path,el){try{const n=path.split('/').pop();
@@ -237,7 +292,7 @@ const CH=['Company Name','Name','Phone','Email','Address','rate'];let cl=[],ccur
 const okPh=v=>v&&!/^(0+|na|lookup)$/i.test(v.trim())?v.trim():'',okEm=v=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v||'').trim())?v.trim():'';
 const gmail=to=>`https://mail.google.com/mail/?authuser=${encodeURIComponent(CFG.email)}&view=cm&fs=1&to=${encodeURIComponent(to)}`;
 async function loadClients(){$('#cMsg').textContent='Loading…';const d=await api(`${S}${CFG.clients}/values/Sheet1!A1:F`);
- cl=(d.values||[]).slice(1).map((r,i)=>({row:i+2,v:Object.fromEntries(CH.map((h,j)=>[h,r[j]??'']))})).filter(r=>r.v['Company Name']||r.v.Name);drawCl()}
+ cl=(d.values||[]).slice(1).map((r,i)=>({row:i+2,v:Object.fromEntries(CH.map((h,j)=>[h,r[j]??'']))})).filter(r=>r.v['Company Name']||r.v.Name);try{localStorage.setItem('bf_cl',JSON.stringify(cl))}catch(e){}drawCl()}
 function drawCl(){const q=$('#cq').value.toLowerCase();
  const L=cl.filter(r=>!q||Object.values(r.v).join(' ').toLowerCase().includes(q)).sort((a,b)=>a.v['Company Name'].toLowerCase().localeCompare(b.v['Company Name'].toLowerCase()));
  $('#cMsg').textContent=L.length+' clients';
@@ -350,7 +405,11 @@ async function saveFill(){try{const max=Math.max(...recs.map(r=>r.row)),by={};re
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')&&!window.bfNative)navigator.serviceWorker.register('sw.js').catch(()=>{});
 // ---- wire up
 $('#bIn').onclick=()=>auth();$('#bRef').onclick=load;$('#q').oninput=draw;
-$('#bSet').onclick=()=>{let d=document.getElementById('setDlg');if(d)d.remove();d=document.createElement('div');d.id='setDlg';d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:99999';d.innerHTML='<div style="background:#fff;padding:20px;border-radius:10px;width:min(560px,92vw);font:14px system-ui"><b>Google OAuth Client ID</b><input id="setCid" style="width:100%;box-sizing:border-box;margin:10px 0;padding:8px;font:13px monospace"><div style="text-align:right"><button id="setX" style="padding:7px 14px">Cancel</button> <button id="setOk" style="padding:7px 14px;font-weight:600">Save</button></div></div>';document.body.appendChild(d);const i=d.querySelector('#setCid');i.value=CFG.client||'';i.focus();d.querySelector('#setX').onclick=()=>d.remove();d.querySelector('#setOk').onclick=()=>{CFG.client=i.value.trim();localStorage.setItem('bf_cfg',JSON.stringify(CFG));tc=null;d.remove()}};
+$('#bSet').onclick=()=>{let d=document.getElementById('setDlg');if(d)d.remove();d=document.createElement('div');d.id='setDlg';d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:99999';
+ d.innerHTML='<div style="background:#fff;padding:20px;border-radius:10px;width:min(560px,92vw);font:14px system-ui"><b>Google OAuth Client ID</b><input id="setCid" style="width:100%;box-sizing:border-box;margin:6px 0 12px;padding:8px;font:13px monospace"><b>Client secret</b> <span style="color:#666">(optional – keeps you signed in for weeks)</span><input id="setSec" type="password" style="width:100%;box-sizing:border-box;margin:6px 0 12px;padding:8px;font:13px monospace"><div style="display:flex;gap:8px;justify-content:flex-end"><button id="setOut" style="padding:7px 14px;margin-right:auto">Sign out</button><button id="setX" style="padding:7px 14px">Cancel</button><button id="setOk" style="padding:7px 14px;font-weight:600">Save</button></div></div>';
+ document.body.appendChild(d);const i=d.querySelector('#setCid'),sc=d.querySelector('#setSec');i.value=CFG.client||'';sc.value=CFG.secret||'';i.focus();d.querySelector('#setX').onclick=()=>d.remove();
+ d.querySelector('#setOut').onclick=()=>{localStorage.removeItem('bf_rt');sessionStorage.removeItem('bf_tok');sessionStorage.removeItem('bf_exp');tok='';tokExp=0;$('#bIn').textContent='Sign in';d.remove();say('Signed out')};
+ d.querySelector('#setOk').onclick=()=>{CFG.client=i.value.trim();CFG.secret=sc.value.trim();localStorage.setItem('bf_cfg',JSON.stringify(CFG));tc=null;d.remove()}};
 $('#rows').onclick=e=>{const tr=e.target.closest('tr');if(tr)open(recs.find(r=>r.row==tr.dataset.r))};
 $('#bNew').onclick=()=>open({row:0,v:{}});$('#bBack').onclick=$('#bBack2').onclick=()=>show('list');
 $('#bSave').onclick=save;$('#bDel').onclick=delT;$('#bCopy').onclick=()=>open(cur,true);$('#bRep').onclick=report;$('#bPrint').onclick=()=>print();
@@ -366,5 +425,13 @@ $('#sw').onclick=e=>{const b=e.target.closest('button');if(!b)return;const t=b.d
  if(b.dataset.cpid){swMake[getF('Brand')]=t;localStorage.setItem('bf_make',JSON.stringify(swMake))}
  navigator.clipboard.writeText(t).then(()=>{const o=b.textContent;b.textContent='✔ Copied';b.classList.add('done');setTimeout(()=>{b.textContent=o;b.classList.remove('done')},1200)}).catch(()=>alert('Copy failed – select the text and press Ctrl+C'))};
 $('#fBack').onclick=()=>show('list');$('#fSave').onclick=saveFill;$('#fRows').onchange=e=>{if(e.target.dataset.fr){fillMap[e.target.dataset.fr]=e.target.value;fillSum()}};
-build();show('list');if(gotToken())load();if(!CFG.client)say('Click Settings → paste your OAuth Client ID, then Sign in');
+$('#bPend').onclick=async()=>{const Q=await qAll(),E=Q.filter(x=>x.err);
+ if(E.length){const m=E.map(x=>(x.v.Address||'?')+': '+x.err).join('\n');if(confirm(m+'\n\nOK = discard these unsynced changes\nCancel = keep and try again')){for(const x of E)await qDel(x.id);recs=recs.filter(r=>!(r.pending&&E.some(x=>(x.row>0?x.row:-x.id)==r.row)));await pendUI();await load();return}}
+ await sync()};
+window.addEventListener('online',()=>sync());
+build();show('list');
+(async()=>{await finishCode();let ok=gotToken();
+ if(!ok&&rt()&&CFG.secret&&navigator.onLine){try{await refreshTok();ok=true}catch(e){}}
+ if(ok)await load();else if(!(await loadCache()))pendUI();
+ if(ok)sync();if(!CFG.client)say('Click Settings → paste your OAuth Client ID, then Sign in')})();
 </script></body></html>
