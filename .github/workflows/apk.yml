@@ -9,6 +9,8 @@ jobs:
         with: { distribution: temurin, java-version: 17 }
       - name: Accept Android licences
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
+      - name: Link SDK tools for Bubblewrap
+        run: sudo ln -sfn $ANDROID_HOME/cmdline-tools/latest $ANDROID_HOME/tools
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm i -g @bubblewrap/cli
