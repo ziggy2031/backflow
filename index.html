@@ -81,7 +81,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 <div class="sec"><h4>👥 Client</h4><div class="g" id="cGrid"></div></div></section>
 <section id="due" hidden><div class="bar"><label>Show devices due within <select id="dueWin" style="width:auto;display:inline-block"><option value="30">30 days</option><option value="60" selected>60 days</option><option value="90">90 days</option><option value="120">120 days</option></select></label><label><input type="checkbox" id="dueOld" style="width:auto"> include long overdue (&gt;6 months)</label><span id="dueMsg" style="color:var(--mu);font-size:13px"></span></div>
 <table><thead><tr><th>Due</th><th>Status</th><th>Address</th><th>Use</th><th>Serial</th><th>Contact</th><th></th></tr></thead><tbody id="dueRows"></tbody></table></section>
-<section id="form" hidden><div class="bar"><button id="bBack">← Back</button><button id="bSave" class="p">Save</button><button id="bCopy">Copy as new</button><button id="bRep">Report</button><button id="bHist">📊 History</button><button id="bSW">📤 Sydney Water</button><button id="bDel" class="d" hidden></button></div><div class="grid" id="grid"></div></section>
+<section id="form" hidden><div class="bar"><button id="bBack">← Back</button><button id="bSave" class="p">Save</button><button id="bCopy">Copy as new</button><button id="bRep">Report</button><button id="bHist">📊 History</button><button id="bSW">📤 Sydney Water</button><button id="bDel" class="d" hidden>🗑 Delete</button></div><div class="grid" id="grid"></div></section>
 <section id="report" hidden><div class="bar"><button id="bBack2">← Back</button><button id="bPrint" class="p">Print / Save PDF</button></div><div id="rep"></div></section>
 </main>
 <datalist id="dl-b"></datalist><datalist id="dl-a"></datalist>
@@ -173,7 +173,7 @@ function getF(k){const e=$(`[data-f="${k}"]`);if(!e)return'';if(e.classList.cont
 function open(rec,copy){cur=copy?{row:0,v:{...rec.v}}:rec;const v=cur.v;H.forEach(k=>{if(k!='Image'&&k!='Dummy')setF(k,v[k])});
  if(copy){KEEP_CLEAR.forEach(k=>{if(k!='Image')setF(k,'')});setF('Date',fd(new Date()));for(const k in gauge)setF(k,gauge[k]);cur.v.Image=''}
  if(!rec.row&&!copy){for(const k in gauge)setF(k,gauge[k]);setF('Date',fd(new Date()));setF('Test Type','Annual');setF('Strainer','YES')}
- $('#img').value='';$('#imgn').textContent=cur.v.Image||'';vis();$('#bDel').hidden=true;show('form');scrollTo(0,0)}
+ $('#img').value='';$('#imgn').textContent=cur.v.Image||'';vis();$('#bDel').hidden=!cur.row;show('form');scrollTo(0,0)}
 async function save(){say('Saving…');try{if(!tok)throw Error('Not signed in – click Sign in');const v={};H.forEach(k=>v[k]=k=='Image'?cur.v.Image||'':k=='Dummy'?'0':(k=='Meter #'||k=='Bypass Meter No.'||k=='Serial #')?getF(k).toUpperCase():getF(k));
  for(const k of ['Date','Address','Property #','Type']) if(!v[k])throw Error(k+' is required');
  const f=$('#img').files[0];if(f){const n=`${fd(new Date()).replace(/\//g,'')}.Image.${Date.now()}.jpg`;const b='bfb'+Date.now();
@@ -184,6 +184,11 @@ async function save(){say('Saving…');try{if(!tok)throw Error('Not signed in �
  else{const r=await api(`${S}${CFG.sheet}/values/Sheet1!A1:AJ:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:row})});
   const m=r.updates.updatedRange.match(/(\d+):/);cur={row:+m[1],v};}
  const i=recs.findIndex(r=>r.row==cur.row);i<0?recs.push(cur):recs[i]=cur;toast('Saved ✔ row '+cur.row);$('#img').value='';draw();show('list')}catch(e){say('');alert('Save failed: '+e.message)}}
+async function delT(){if(!cur.row)return;const v=cur.v||{};const d=[v.Date,v.Address,v['Serial #']].filter(Boolean).join(' · ');
+ if(!confirm('Delete this test?\n\n'+d+'\n\nThis removes the row from your Google Sheet and cannot be undone.'))return;
+ try{say('Deleting…');const m=await api(`${S}${CFG.sheet}?fields=sheets.properties(sheetId,title)`);const sh=m.sheets.find(x=>x.properties.title=='Sheet1')||m.sheets[0];
+ await api(`${S}${CFG.sheet}:batchUpdate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requests:[{deleteDimension:{range:{sheetId:sh.properties.sheetId,dimension:'ROWS',startIndex:cur.row-1,endIndex:cur.row}}}]})});
+ toast('Deleted');await load();show('list')}catch(e){say('');alert('Delete failed: '+e.message)}}
 function toast(t){let d=$('#toast');if(!d){d=document.createElement('div');d.id='toast';d.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1d8a4a;color:#fff;padding:14px 28px;border-radius:8px;font-size:18px;z-index:99';document.body.appendChild(d)}d.textContent=t;d.style.display='block';setTimeout(()=>d.style.display='none',2500)}
 // ---- report
 async function photo(path,el){try{const n=path.split('/').pop();
@@ -337,7 +342,7 @@ $('#bIn').onclick=()=>auth();$('#bRef').onclick=load;$('#q').oninput=draw;
 $('#bSet').onclick=()=>{let d=document.getElementById('setDlg');if(d)d.remove();d=document.createElement('div');d.id='setDlg';d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:99999';d.innerHTML='<div style="background:#fff;padding:20px;border-radius:10px;width:min(560px,92vw);font:14px system-ui"><b>Google OAuth Client ID</b><input id="setCid" style="width:100%;box-sizing:border-box;margin:10px 0;padding:8px;font:13px monospace"><div style="text-align:right"><button id="setX" style="padding:7px 14px">Cancel</button> <button id="setOk" style="padding:7px 14px;font-weight:600">Save</button></div></div>';document.body.appendChild(d);const i=d.querySelector('#setCid');i.value=CFG.client||'';i.focus();d.querySelector('#setX').onclick=()=>d.remove();d.querySelector('#setOk').onclick=()=>{CFG.client=i.value.trim();localStorage.setItem('bf_cfg',JSON.stringify(CFG));tc=null;d.remove()}};
 $('#rows').onclick=e=>{const tr=e.target.closest('tr');if(tr)open(recs.find(r=>r.row==tr.dataset.r))};
 $('#bNew').onclick=()=>open({row:0,v:{}});$('#bBack').onclick=$('#bBack2').onclick=()=>show('list');
-$('#bSave').onclick=save;$('#bCopy').onclick=()=>open(cur,true);$('#bRep').onclick=report;$('#bPrint').onclick=()=>print();
+$('#bSave').onclick=save;$('#bDel').onclick=delT;$('#bCopy').onclick=()=>open(cur,true);$('#bRep').onclick=report;$('#bPrint').onclick=()=>print();
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{show(b.dataset.t);if(b.dataset.t=='due')drawDue();if(b.dataset.t=='mapPg'&&initMap()){drawMap();geocodeAll()}if(b.dataset.t=='gaugePg')openGauge();if(b.dataset.t=='clients'&&tok&&!cl.length)loadClients().catch(e=>say(e.message))});$('#dueWin').onchange=$('#dueOld').onchange=drawDue;
 $('#dueRows').onclick=e=>{if(e.target.closest('a'))return;const hb=e.target.closest('[data-hist]');if(hb){openHist(recs.find(r=>r.row==hb.dataset.hist).v,'due');return}const rt=e.target.closest('[data-retest]');if(rt){open(recs.find(r=>r.row==rt.dataset.retest),true);return}const tr=e.target.closest('tr');if(tr)open(recs.find(r=>r.row==tr.dataset.r))};
 $('#gSave').onclick=saveGauge;$('#gD').onchange=gNote;$('#mapRetry').onclick=()=>{for(const a in geo)if(geo[a]===0)delete geo[a];localStorage.setItem('bf_geo',JSON.stringify(geo));geocodeAll()};
