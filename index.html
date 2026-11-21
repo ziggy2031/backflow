@@ -21,7 +21,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:rgba(47,123,208,.1)}
 .seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}.seg button.on.f{background:var(--bad);border-color:var(--bad)}
 .bar{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}.bar input{max-width:360px}
 .pass{color:var(--ok);font-weight:600}.fail{color:var(--bad);font-weight:600}
-#msg{font-size:13px;color:var(--mu)}header #bPend{background:#e6a117;border-color:#e6a117;color:#fff;font-weight:600}
+#msg{font-size:13px;color:var(--mu)}#aGrid .sec{margin-bottom:12px}.stp{display:flex;gap:6px}.stp input{text-align:center;flex:1}.stp button{min-width:44px}.seg .addo{border-style:dashed;color:var(--mu)}header #bPend{background:#e6a117;border-color:#e6a117;color:#fff;font-weight:600}
 #rep{background:#fff;color:#000;padding:15mm;max-width:210mm;margin:0 auto;font:13px/1.25 Arial,Helvetica,sans-serif}
 #rep .hd{display:flex;justify-content:space-between;align-items:center;text-align:center}#rep .hd img{height:85px;width:170px;object-fit:contain}#rep .hd img.l{object-position:left center}#rep .hd img.r{object-position:right center}
 #rep h3{text-align:center;text-decoration:underline;margin:22px 0 14px;font-size:14px}#rep .sig{height:38px}#rep .ph{max-height:55mm;max-width:75mm;margin-top:6px}
@@ -60,11 +60,11 @@ table{display:block;overflow-x:auto;white-space:nowrap}th,td{max-width:200px}.st
 .sec .g{grid-template-columns:1fr}.w2{grid-column:auto}.swr{flex-wrap:wrap}.swl{flex:1 0 100%}
 input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbox{height:60vh}.bar input{max-width:none;flex:1}.seg{flex-wrap:wrap;gap:4px}.seg button,.seg button:first-child,.seg button:last-child{padding:10px 8px;white-space:normal;min-width:0;flex:1 1 auto;font-size:14px;border-radius:6px}html,body{overflow-x:hidden}}
 @page{size:A4;margin:0}
-@media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
+@media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#aPg,#aForm,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v0.7</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.0</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
-<nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button></nav>
+<nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button><button data-t="aPg">🏠 Assessment</button></nav>
 <section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
 <table><thead><tr><th>Date</th><th>Address</th><th>Use</th><th>Type</th><th>Serial</th><th>Result</th></tr></thead><tbody id="rows"></tbody></table></section>
 <section id="mapPg" hidden><div class="bar"><span id="mapMsg" style="color:var(--mu);font-size:13px"></span><span style="font-size:13px">🟢 OK &nbsp;🟠 due ≤60 days &nbsp;🔴 failed &nbsp;🔵 no result</span><button id="mapRetry">Retry unlocated</button></div><div id="mapbox"></div></section>
@@ -81,6 +81,9 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 <div class="sec"><h4>👥 Client</h4><div class="g" id="cGrid"></div></div></section>
 <section id="due" hidden><div class="bar"><label>Show devices due within <select id="dueWin" style="width:auto;display:inline-block"><option value="30">30 days</option><option value="60" selected>60 days</option><option value="90">90 days</option><option value="120">120 days</option></select></label><label><input type="checkbox" id="dueOld" style="width:auto"> include long overdue (&gt;6 months)</label><span id="dueMsg" style="color:var(--mu);font-size:13px"></span></div>
 <table><thead><tr><th>Due</th><th>Status</th><th>Address</th><th>Use</th><th>Serial</th><th>Contact</th><th></th></tr></thead><tbody id="dueRows"></tbody></table></section>
+<section id="aPg" hidden><div class="bar"><input id="aq" placeholder="Search assessments…"><button id="aNew" class="p">+ New assessment</button><button id="aRef">Refresh</button></div>
+<table><thead><tr><th>Date</th><th>Address</th><th>Use</th><th>Status</th><th>Hazard</th><th>Score</th></tr></thead><tbody id="aRows"></tbody></table></section>
+<section id="aForm" hidden><div class="bar"><button id="aBack">← Back</button><button id="aSave" class="p">Save</button><button id="aCopy">Copy as new</button><button id="aDel" class="d" hidden>🗑 Delete</button></div><div id="aGrid"></div></section>
 <section id="form" hidden><div class="bar"><button id="bBack">← Back</button><button id="bSave" class="p">Save</button><button id="bCopy">Copy as new</button><button id="bRep">Report</button><button id="bHist">📊 History</button><button id="bSW">📤 Sydney Water</button><button id="bDel" class="d" hidden>🗑 Delete</button></div><div class="grid" id="grid"></div></section>
 <section id="report" hidden><div class="bar"><button id="bBack2">← Back</button><button id="bPrint" class="p">Print / Save PDF</button></div><div id="rep"></div></section>
 </main>
@@ -92,9 +95,9 @@ const SEG={'Connection Type':['Sydney Water meter','Boundary connection','Fire s
 const NUM=['Inlet Pressure','Check1','Relief Port','Check2','Size'],BYP=['Bypass Meter No.','Bypass DCV Brand','DCDA Bypass Check1','DCDA Bypass Check 2'];
 const KEEP_CLEAR=['Check1','Relief Port','Check2','Result','Image','Notes',...BYP.slice(2)];
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const CFG=Object.assign({client:'',sheet:'1XkN0CMENx6NrXW1YBboLPpSo6ygzoc48237ADaCtB90',clients:'1mUFKVtjiIR5W3V2B6Fdza9a89yrKoa4MgTK8zuGKpFk',folder:'1QJWIE2SJYwSTVA7f_hfnwCUu7Qj4_tpW',imgdir:'Backflow 3_Images',
+const CFG=Object.assign({client:'',sheet:'1XkN0CMENx6NrXW1YBboLPpSo6ygzoc48237ADaCtB90',clients:'1mUFKVtjiIR5W3V2B6Fdza9a89yrKoa4MgTK8zuGKpFk',assess:'1Xb4Dn-9okhNy8kBswHYu1vVNTX0JNAcZFBkAzlDnEzE',folder:'1QJWIE2SJYwSTVA7f_hfnwCUu7Qj4_tpW',imgdir:'Backflow 3_Images',
  name:'Colin Bell Plumbing',lic:'33705C',person:'Colin Bell',mobile:'0412 619516',email:'colinbellplumbing@gmail.com'},JSON.parse(localStorage.getItem('bf_cfg')||'{}'));
-let tok='',recs=[],cur=null,gauge={},tc;
+let tok='',recs=[],arecs=[],cur=null,gauge={},tc;
 const say=t=>$('#msg').textContent=t||'';
 // ---- dates
 const pd=s=>{const m=String(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?new Date(+m[3],m[2]-1,+m[1]):new Date(0)};
@@ -141,12 +144,13 @@ let _db;const idb=()=>_db||(_db=new Promise((res,rej)=>{const r=indexedDB.open('
 const qx=async(m,f)=>{const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('q',m),r=f(t.objectStore('q'));t.oncomplete=()=>res(r.result);t.onerror=()=>rej(t.error)})};
 const qAll=()=>qx('readonly',s=>s.getAll()),qPut=it=>qx('readwrite',s=>s.put(it)),qDel=id=>qx('readwrite',s=>s.delete(id));
 async function pendUI(){const Q=await qAll().catch(()=>[]),b=$('#bPend');b.hidden=!Q.length;b.textContent=(Q.some(x=>x.err)?'⚠ ':'⏳ ')+Q.length+' to sync'}
-async function overlay(){const Q=await qAll().catch(()=>[]);Q.forEach(it=>{const rec={row:it.row>0?it.row:-it.id,v:it.v,pending:1};const i=recs.findIndex(r=>r.row==rec.row);i<0?recs.push(rec):recs[i]=rec});pendUI()}
+async function overlay(){const Q=await qAll().catch(()=>[]);Q.forEach(it=>{const arr=it.k=='a'?arecs:recs,rec={row:it.row>0?it.row:-it.id,v:it.v,pending:1};const i=arr.findIndex(r=>r.row==rec.row);i<0?arr.push(rec):arr[i]=rec});pendUI()}
 function cacheSave(){try{localStorage.setItem('bf_cache',JSON.stringify({recs,gauge,t:Date.now()}))}catch(e){}}
 async function loadCache(e){try{const c=JSON.parse(localStorage.getItem('bf_cache')||'null');if(!c)return false;recs=c.recs||[];gauge=c.gauge||{};
  try{cl=JSON.parse(localStorage.getItem('bf_cl')||'[]');drawCl()}catch(x){}
+ try{arecs=JSON.parse(localStorage.getItem('bf_acache')||'[]')}catch(x){arecs=[]}
  const brands=[...new Set(recs.map(r=>r.v.Brand).filter(Boolean))].sort();$('#dl-b').innerHTML=brands.map(b=>`<option>${esc(b)}`).join('');
- await overlay();draw();say((e&&!isNet(e)?'Not signed in':'Offline')+' – saved copy from '+new Date(c.t).toLocaleString('en-AU',{dateStyle:'short',timeStyle:'short'}));return true}catch(x){return false}}
+ await overlay();draw();drawA();say((e&&!isNet(e)?'Not signed in':'Offline')+' – saved copy from '+new Date(c.t).toLocaleString('en-AU',{dateStyle:'short',timeStyle:'short'}));return true}catch(x){return false}}
 let syncing=false,again=false;
 async function sync(){if(syncing){again=true;return}syncing=true;let done=0,why='';
  try{const Q=(await qAll()).sort((a,b)=>a.id-b.id);if(!Q.length||!navigator.onLine)return;say('Syncing…');
@@ -155,13 +159,13 @@ async function sync(){if(syncing){again=true;return}syncing=true;let done=0,why=
     if(it.img){const n=it.imgName||`${fd(new Date()).replace(/\//g,'')}.Image.${Date.now()}.jpg`,b='bfb'+Date.now();
      const body=new Blob([`--${b}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify({name:n,parents:[CFG.folder]})}\r\n--${b}\r\nContent-Type: ${it.img.type||'image/jpeg'}\r\n\r\n`,it.img,`\r\n--${b}--`]);
      await api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body});it.v.Image=`${CFG.imgdir}/${n}`;it.img=null;await qPut(it)}
-    const row=[H.map(k=>it.v[k])];
+    const T=it.k=='a'?{id:CFG.assess,cols:AH,last:'W',kf:['Property Address','Date','Property No.']}:{id:CFG.sheet,cols:H,last:'AJ',kf:['Date','Address','Serial #']};const row=[T.cols.map(k=>it.v[k]??'')];
     if(it.row>0){
-     if(it.key){const g=await api(`${S}${CFG.sheet}/values/Sheet1!A${it.row}:AJ${it.row}`),x=(g.values||[[]])[0]||[];
-      const k=[x[H.indexOf('Date')],x[H.indexOf('Address')],x[H.indexOf('Serial #')]].map(z=>z??'').join('|');
+     if(it.key){const g=await api(`${S}${T.id}/values/Sheet1!A${it.row}:${T.last}${it.row}`),x=(g.values||[[]])[0]||[];
+      const k=T.kf.map(f=>x[T.cols.indexOf(f)]).map(z=>z??'').join('|');
       if(k!=it.key){it.err='That row has changed in the sheet, so I did not overwrite it.';await qPut(it);continue}}
-     await api(`${S}${CFG.sheet}/values/Sheet1!A${it.row}:AJ${it.row}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:row})})}
-    else await api(`${S}${CFG.sheet}/values/Sheet1!A1:AJ:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:row})});
+     await api(`${S}${T.id}/values/Sheet1!A${it.row}:${T.last}${it.row}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:row})})}
+    else await api(`${S}${T.id}/values/Sheet1!A1:${T.last}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:row})});
     await qDel(it.id);done++
    }catch(e){if(isNet(e)){why='offline';break}if(/Session expired|Not signed in/.test(e.message)){why=e.message;break}it.err=e.message;await qPut(it)}}
  }finally{syncing=false}
@@ -175,16 +179,16 @@ async function load(){say('Loading…');try{
  try{const g=await api(`${S}${CFG.sheet}/values/Gauge!A2:C2`);const x=g.values[0];gauge={Gauge:x[0],GaugeSerial:x[1],GaugeDateTested:y4(x[2])}}catch(e){}
  cacheSave();await overlay();
  const brands=[...new Set(recs.map(r=>r.v.Brand).filter(Boolean))].sort();$('#dl-b').innerHTML=brands.map(b=>`<option>${esc(b)}`).join('');
- say(recs.length+' records');draw();loadClients().catch(()=>{})}catch(e){if(isNet(e)||/Session expired|Not signed in/.test(e.message)){if(!(await loadCache(e)))say(e.message)}else say(e.message)}}
+ say(recs.length+' records');draw();loadClients().catch(()=>{});loadAssess().catch(()=>{})}catch(e){if(isNet(e)||/Session expired|Not signed in/.test(e.message)){if(!(await loadCache(e)))say(e.message)}else say(e.message)}}
 function draw(){const q=$('#q').value.toLowerCase();
  const L=recs.filter(r=>!q||Object.values(r.v).join(' ').toLowerCase().includes(q)).sort((a,b)=>pd(b.v.Date)-pd(a.v.Date)||b.row-a.row).slice(0,300);
  $('#rows').innerHTML=L.map(r=>`<tr data-r="${r.row}"><td>${r.pending?'⏳ ':''}${esc(r.v.Date)}<td>${esc(r.v.Address)}<td>${esc(r.v['Device Use'])}<td>${esc(r.v.Type)}<td>${esc((r.v['Serial #']||'').toUpperCase())}<td><span class="pill ${(r.v.Result||'').toLowerCase()}">${esc(r.v.Result)}</span>`).join('')
  const nd=dueList(60,false).length,now=new Date(),mo=recs.filter(r=>{const d=pd(r.v.Date);return d.getMonth()==now.getMonth()&&d.getFullYear()==now.getFullYear()}).length,yr=recs.filter(r=>pd(r.v.Date).getFullYear()==now.getFullYear()),fl=yr.filter(r=>r.v.Result=='FAIL').length;
  $('#stats').innerHTML=`<div><b>${recs.length}</b><span>Total tests</span></div><div><b>${yr.length}</b><span>This year</span></div><div><b>${mo}</b><span>This month</span></div><div class="${fl?'bad':'ok'}"><b>${fl}</b><span>Fails this year</span></div><div class="amb" id="sdue" style="cursor:pointer"><b>${nd}</b><span>Due in 60 days</span></div>`;$('#dueN').textContent=nd;$('#dueN').style.display=nd?'':'none';$('#sdue').onclick=()=>{show('due');drawDue()}}
 // ---- form
-function render(id){['list','form','report','due','clients','cform','mapPg','gaugePg','histPg','swPg','fillPg'].forEach(s=>$('#'+s).hidden=s!=id);$('#tabs').hidden=['form','report','cform','histPg','swPg','fillPg'].includes(id);document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==id))}
+function render(id){['list','aPg','aForm','form','report','due','clients','cform','mapPg','gaugePg','histPg','swPg','fillPg'].forEach(s=>$('#'+s).hidden=s!=id);$('#tabs').hidden=['form','report','cform','histPg','swPg','fillPg'].includes(id)||id=='aForm';document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==id))}
 // ---- navigation: phone back button steps back through screens
-const TABV=['list','due','clients','mapPg','gaugePg'];let vs=[null,'list'];
+const TABV=['list','due','clients','mapPg','gaugePg','aPg'];let vs=[null,'list'];
 try{history.replaceState({bf:1,i:0},'');history.pushState({bf:1,i:1},'')}catch(e){}
 function show(id){const top=vs[vs.length-1];
  if(id==top){render(id);return}
@@ -240,7 +244,7 @@ function open(rec,copy){cur=copy?{row:0,v:{...rec.v}}:rec;const v=cur.v;H.forEac
  $('#img').value='';$('#imgn').textContent=cur.v.Image||'';vis();$('#bDel').hidden=!cur.row;show('form');scrollTo(0,0)}
 async function save(){say('Saving…');try{const v={};H.forEach(k=>v[k]=k=='Image'?cur.v.Image||'':k=='Dummy'?'0':(k=='Meter #'||k=='Bypass Meter No.'||k=='Serial #')?getF(k).toUpperCase():getF(k));
  for(const k of ['Date','Address','Property #','Type']) if(!v[k])throw Error(k+' is required');
- const f=$('#img').files[0],Q=await qAll();let it=cur.row<0?Q.find(x=>x.id==-cur.row):cur.row>0?Q.find(x=>x.row==cur.row):null;
+ const f=$('#img').files[0],Q=await qAll();let it=cur.row<0?Q.find(x=>x.id==-cur.row):cur.row>0?Q.find(x=>x.row==cur.row&&x.k!='a'):null;
  if(!it)it={row:Math.max(cur.row,0),key:cur.row>0?[cur.v.Date,cur.v.Address,cur.v['Serial #']].map(z=>z??'').join('|'):''};
  it.v=v;delete it.err;if(f){it.img=f;it.imgName=`${fd(new Date()).replace(/\//g,'')}.Image.${Date.now()}.jpg`}
  const id=await qPut(it);if(!it.id)it.id=id;
@@ -254,7 +258,7 @@ async function delT(){if(!cur.row)return;
  if(!confirm('Delete this test?\n\n'+d+'\n\nThis removes the row from your Google Sheet and cannot be undone.'))return;
  try{say('Deleting…');const m=await api(`${S}${CFG.sheet}?fields=sheets.properties(sheetId,title)`);const sh=m.sheets.find(x=>x.properties.title=='Sheet1')||m.sheets[0];
  await api(`${S}${CFG.sheet}:batchUpdate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requests:[{deleteDimension:{range:{sheetId:sh.properties.sheetId,dimension:'ROWS',startIndex:cur.row-1,endIndex:cur.row}}}]})});
- for(const x of await qAll())if(x.row==cur.row)await qDel(x.id);toast('Deleted');await load();show('list')}catch(e){say('');alert(isNet(e)?'Delete needs a signal – try again when you are online.':'Delete failed: '+e.message)}}
+ for(const x of await qAll())if(x.row==cur.row&&x.k!='a')await qDel(x.id);toast('Deleted');await load();show('list')}catch(e){say('');alert(isNet(e)?'Delete needs a signal – try again when you are online.':'Delete failed: '+e.message)}}
 function toast(t){let d=$('#toast');if(!d){d=document.createElement('div');d.id='toast';d.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1d8a4a;color:#fff;padding:14px 28px;border-radius:8px;font-size:18px;z-index:99';document.body.appendChild(d)}d.textContent=t;d.style.display='block';setTimeout(()=>d.style.display='none',2500)}
 // ---- report
 async function photo(path,el){try{const n=path.split('/').pop();
@@ -403,6 +407,119 @@ async function saveFill(){try{const max=Math.max(...recs.map(r=>r.row)),by={};re
  await api(`${S}${CFG.sheet}/values/Sheet1!AJ2:AJ${max}?valueInputOption=RAW`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:vals})});
  recs.forEach(r=>{if(!r.v['Connection Type']&&fillMap[r.row])r.v['Connection Type']=fillMap[r.row]});toast('Connection types written ✔');draw();show('list')}catch(e){alert('Write failed: '+e.message)}}
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')&&!window.bfNative)navigator.serviceWorker.register('sw.js').catch(()=>{});
+// ---- assessments (BackflowAssessment sheet)
+const AH=['Property Address','PropertyUse','Property No.','Property Status','Meter No.','Water Supply Authority','Date','Assesor Name','License No','Type of Water Supply','Multiple Meters','Interconnection','What is Present','Submerged','Impact','Substances','Cross Connections','Back Pressure','Siphonage','BackflowValve Present','Testable','DateLastTest','Score'];
+const AREQ=['Property Address','Date','Multiple Meters','Interconnection','What is Present','Submerged','Substances','Cross Connections','Back Pressure','Siphonage','BackflowValve Present','Testable'];
+const AYN=['Multiple Meters','Interconnection','Submerged','Cross Connections','Back Pressure','Siphonage','BackflowValve Present','Testable'];
+const ALBL={'Assesor Name':'Assessor Name','License No':'Licence No'};
+const ASEED={PropertyUse:['Residential Single Dwelling','Residential Multi Dwelling','Commercial','Industrial'],'Property Status':['Existing Property','New Property'],
+ 'What is Present':['Fire Service','Boiler or Heating services','Cooling towers or Evaporative coolers','Medical or Laboratory equipment','Swimming pools or Spa'],
+ Impact:['Serious illness or Death','Illness'],Substances:['Chemicals or solvents','Medical or Pharmaceutical substances']};
+const AMULTI=['PropertyUse','What is Present','Substances'];
+let acur=null;
+const aOptCustom=()=>{try{return JSON.parse(localStorage.getItem('bf_aopt')||'{}')}catch(e){return{}}};
+function addOpt(k,t){const c=aOptCustom();c[k]=[...new Set([...(c[k]||[]),t])];try{localStorage.setItem('bf_aopt',JSON.stringify(c))}catch(e){}}
+function optsFor(k){const seen=[];arecs.forEach(r=>String(r.v[k]||'').split(',').forEach(x=>{x=x.trim().replace(/^Serial illness/i,'Serious illness');if(x)seen.push(x)}));
+ const out=[];[...ASEED[k],...(aOptCustom()[k]||[]),...seen].forEach(o=>{if(!out.some(x=>x.toLowerCase()==o.toLowerCase()))out.push(o)});return out}
+const aE=k=>$(`#aGrid [data-f="${k}"]`);
+function aGet(k){const e=aE(k);if(!e)return'';if(e.classList.contains('seg'))return[...e.querySelectorAll('button.on')].map(b=>b.dataset.o).join(' , ');return e.dataset.date?fromISO(e.value):e.value}
+function aSet(k,v){const e=aE(k);if(!e)return;
+ if(e.classList.contains('seg')){[...e.querySelectorAll('button')].forEach(b=>b.classList.remove('on'));
+  String(v??'').split(',').map(x=>x.trim()).filter(Boolean).forEach(w=>{let b=[...e.querySelectorAll('button[data-o]')].find(x=>x.dataset.o.toLowerCase()==w.toLowerCase());
+   if(!b){b=document.createElement('button');b.type='button';b.dataset.o=w;b.textContent=w;const ad=e.querySelector('.addo');ad?e.insertBefore(b,ad):e.appendChild(b)}b.classList.add('on')})}
+ else if(e.dataset.date)e.value=toISO(v);else e.value=v??''}
+function buildA(){const seg=(k,opts,m)=>`<div class="seg" data-f="${k}" ${m?'data-m=1':''}>${opts.map(o=>`<button type="button" data-o="${esc(o)}">${esc(o)}</button>`).join('')}<button type="button" class="addo">＋ Add</button></div>`;
+ const fixed=(k,opts)=>`<div class="seg" data-f="${k}">${opts.map(o=>`<button type="button" data-o="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+ const fld=k=>{let i;
+  if(AYN.includes(k))i=`<div class="seg" data-f="${k}"><button type="button" data-o="FALSE">N</button><button type="button" data-o="TRUE">Y</button></div>`;
+  else if(k=='Water Supply Authority')i=fixed(k,['Sydney Water','Hunter Water']);
+  else if(k=='Type of Water Supply')i=fixed(k,['Drinking','Non Drinking','Combined']);
+  else if(ASEED[k])i=seg(k,optsFor(k),AMULTI.includes(k));
+  else if(k=='Date'||k=='DateLastTest')i=`<input type="date" data-f="${k}" data-date="1">`;
+  else if(k=='Score')i=`<div class="stp"><button type="button" data-step="-1">−</button><input type="number" step="1" data-f="Score"><button type="button" data-step="1">+</button></div>`;
+  else if(k=='License No')i=`<input data-f="${k}" readonly style="background:#f1f3f5;color:#667">`;
+  else i=`<input data-f="${k}" ${k=='Property Address'?'list="dl-a" autocomplete="off"':''}>`;
+  return `<div class="${['Property Address','PropertyUse','What is Present','Substances','Type of Water Supply','Water Supply Authority','Property Status','Impact'].includes(k)?'w2':''}"><label>${ALBL[k]||k}${AREQ.includes(k)?' <span style="color:#c0392b">*</span>':''}</label>${i}</div>`};
+ const SEC=[['🏠 Property',['Property Address','PropertyUse','Property No.','Property Status','Meter No.','Water Supply Authority']],['📝 Assessment',['Date','Assesor Name','License No','Type of Water Supply','Multiple Meters','Interconnection','What is Present','Submerged','Impact','Substances']],['⚠ Hazard',['Cross Connections','Back Pressure','Siphonage','BackflowValve Present','Testable','DateLastTest','Score']]];
+ $('#aGrid').innerHTML=SEC.map(([t,l])=>`<div class="sec"><h4>${t}</h4><div class="g">${l.map(fld).join('')}</div></div>`).join('')+'<div class="sec"><h4>📋 Result</h4><div id="aRes"></div></div>';
+ const mi=aE('Meter No.');mi.oninput=()=>{const p=mi.selectionStart;mi.value=mi.value.toUpperCase();mi.setSelectionRange(p,p)};
+ let t;const ad=aE('Property Address');ad.oninput=e=>{clearTimeout(t);const v=e.target.value;if(v.length<5)return;
+  t=setTimeout(async()=>{try{const r=await(await fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=au&limit=5&q='+encodeURIComponent(v))).json();
+   $('#dl-a').innerHTML=r.map(x=>`<option>${esc(x.display_name.replace(/, (City of|Council).*?,/,',').slice(0,120))}`).join('')}catch(e){}},500)};
+ ad.onchange=e=>{const a=e.target.value,m=arecs.filter(r=>r.v['Property Address']==a)[0],tt=recs.filter(r=>r.v.Address==a)[0];
+  if(!aGet('Property No.'))aSet('Property No.',(m&&m.v['Property No.'])||(tt&&tt.v['Property #'])||'');
+  if(!aGet('Meter No.'))aSet('Meter No.',(m&&m.v['Meter No.'])||(tt&&tt.v['Meter #'])||'')}}
+$('#aGrid').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.step){const i=b.parentNode.querySelector('input');i.value=(+i.value||0)+(+b.dataset.step);return}
+ const s=b.closest('.seg');if(!s)return;
+ if(b.classList.contains('addo')){const i=document.createElement('input');i.placeholder='New option, then Enter';i.style.cssText='flex:1 1 100%;margin-top:6px';s.appendChild(i);b.remove();i.focus();let fin=false;
+  const done=()=>{if(fin)return;fin=true;const t=i.value.trim();i.remove();let nb;
+   if(t){addOpt(s.dataset.f,t);nb=document.createElement('button');nb.type='button';nb.dataset.o=t;nb.textContent=t;s.appendChild(nb);if(!s.dataset.m)s.querySelectorAll('button.on').forEach(x=>x.classList.remove('on'));nb.classList.add('on')}
+   const a2=document.createElement('button');a2.type='button';a2.className='addo';a2.textContent='＋ Add';s.appendChild(a2)};
+  i.onkeydown=ev=>{if(ev.key=='Enter'){ev.preventDefault();done()}};i.onblur=done;return}
+ if(s.dataset.m)b.classList.toggle('on');else{const was=b.classList.contains('on');s.querySelectorAll('button').forEach(x=>x.classList.remove('on'));if(!was)b.classList.add('on')}};
+function openA(rec,copy){buildA();acur=copy?{row:0,v:{...rec.v}}:rec;const v=acur.v;AH.forEach(k=>aSet(k,v[k]));
+ if(!acur.row){aSet('Date',fd(new Date()));aSet('DateLastTest','');if(!copy){aSet('Water Supply Authority','Sydney Water');aSet('Assesor Name',CFG.person);aSet('Score',0)}}
+ if(!aGet('License No'))aSet('License No',CFG.lic);if(!aGet('Assesor Name'))aSet('Assesor Name',CFG.person);if(aGet('Score')==='')aSet('Score',0);
+ aResUI();$('#aDel').hidden=!acur.row;show('aForm');scrollTo(0,0)}
+function drawA(){const q=$('#aq').value.toLowerCase();
+ const L=arecs.filter(r=>!q||Object.values(r.v).join(' ').toLowerCase().includes(q)).sort((a,b)=>pd(b.v.Date)-pd(a.v.Date)||b.row-a.row);
+ $('#aRows').innerHTML=L.map(r=>`<tr data-r="${r.row}"><td>${r.pending?'⏳ ':''}${esc(r.v.Date)}<td>${esc(r.v['Property Address'])}<td>${esc(r.v.PropertyUse)}<td>${esc(r.v['Property Status'])}<td>${aHazCell(r.v)}<td>${esc(r.v.Score)}`).join('')||'<tr><td colspan=6 style="color:var(--mu)">No assessments yet</td></tr>'}
+async function loadAssess(){const d=await api(`${S}${CFG.assess}/values/Sheet1!A1:W?valueRenderOption=FORMATTED_VALUE`);
+ arecs=(d.values||[]).slice(1).map((r,i)=>({row:i+2,v:Object.fromEntries(AH.map((h,j)=>[h,r[j]??'']))})).filter(r=>r.v['Property Address']);
+ try{localStorage.setItem('bf_acache',JSON.stringify(arecs))}catch(e){}await overlay();drawA()}
+async function saveA(){say('Saving…');try{const v={};AH.forEach(k=>v[k]=k=='Meter No.'?aGet(k).toUpperCase():aGet(k));
+ for(const k of AREQ)if(!v[k])throw Error((ALBL[k]||k)+' is required');
+ const Q=await qAll();let it=acur.row<0?Q.find(x=>x.id==-acur.row):acur.row>0?Q.find(x=>x.row==acur.row&&x.k=='a'):null;
+ if(!it)it={k:'a',row:Math.max(acur.row,0),key:acur.row>0?[acur.v['Property Address'],acur.v.Date,acur.v['Property No.']].map(z=>z??'').join('|'):''};
+ it.v=v;delete it.err;const id=await qPut(it);if(!it.id)it.id=id;
+ const nr=acur.row>0?acur.row:-it.id,rec={row:nr,v,pending:1},i=arecs.findIndex(r=>r.row==nr);i<0?arecs.push(rec):arecs[i]=rec;acur=rec;
+ drawA();await pendUI();show('aPg');say('');await sync();
+ const left=(await qAll()).find(x=>x.id==it.id);
+ if(!left)toast('Saved ✔');else if(left.err)alert('Saved on your phone, but Google said no:\n'+left.err);else toast('📱 Saved on phone – will sync when you have signal')}catch(e){say('');alert('Save failed: '+e.message)}}
+async function delA(){if(!acur.row)return;
+ if(acur.row<0){if(!confirm('Discard this assessment that has not synced yet?'))return;await qDel(-acur.row);arecs=arecs.filter(r=>r.row!=acur.row);drawA();await pendUI();toast('Discarded');show('aPg');return}
+ const v=acur.v,d=[v.Date,v['Property Address']].filter(Boolean).join(' · ');
+ if(!confirm('Delete this assessment?\n\n'+d+'\n\nThis removes the row from your Google Sheet and cannot be undone.'))return;
+ try{say('Deleting…');const m=await api(`${S}${CFG.assess}?fields=sheets.properties(sheetId,title)`);const sh=m.sheets.find(x=>x.properties.title=='Sheet1')||m.sheets[0];
+ await api(`${S}${CFG.assess}:batchUpdate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requests:[{deleteDimension:{range:{sheetId:sh.properties.sheetId,dimension:'ROWS',startIndex:acur.row-1,endIndex:acur.row}}}]})});
+ for(const x of await qAll())if(x.row==acur.row&&x.k=='a')await qDel(x.id);toast('Deleted');await loadAssess();show('aPg')}catch(e){say('');alert(isNet(e)?'Delete needs a signal – try again when you are online.':'Delete failed: '+e.message)}}
+// result: risk -> hazard rating -> protection (Colin's workflow)
+const tf=x=>/^true$/i.test(String(x||'').trim());
+// NCC 2022 Vol 3 B5V1 scoring (tables B5V1a-e), mapped from the assessment form answers
+function nccScore(v){const list=x=>String(x||'').split(',').map(z=>z.trim().toLowerCase()).filter(Boolean),use=list(v.PropertyUse),pres=list(v['What is Present']),sub=list(v.Substances);
+ const has=(arr,re)=>arr.some(x=>re.test(x)),ind=has(use,/industrial/),com=has(use,/commercial/),multi=has(use,/multi/),chem=sub.length>0,med=has(sub,/medical|pharma/);
+ const t={};
+ t.a=ind?3:com?(chem?3:2):multi?2:use.length?1:1;
+ const nonDW=v['Type of Water Supply']&&!/drinking/i.test(v['Type of Water Supply']);
+ t.b=(ind&&(tf(v.Interconnection)||nonDW))?5:(tf(v.Interconnection)||nonDW||has(pres,/fire/))?3:0;
+ t.c=(ind||med)?3:(chem||com&&chem)?2:1;
+ let d=0;if(tf(v.Interconnection)||tf(v['Cross Connections']))d=Math.max(d,2);if(has(pres,/pool|spa|cooling|boiler|heating|medical|laborator/)||tf(v.Submerged)||chem)d=Math.max(d,3);if(med&&(tf(v['Cross Connections'])||tf(v.Submerged)))d=5;
+ t.d=d;
+ t.e=(tf(v['Multiple Meters'])||ind)?3:(multi||com)?2:1;
+ const total=t.a+t.b+t.c+t.d+t.e,band=total>=11?'High':total>=8?'Medium':total>=4?'Low':'None';
+ const floor=has(pres,/cooling|medical|laborator/)?'High':'';
+ return{t,total,band,floor}}
+const HR={None:0,Low:1,Medium:2,High:3},HN=['None','Low','Medium','High'];
+function assessResult(v){const list=s=>String(s||'').split(',').map(x=>x.trim()).filter(Boolean),why=[];
+ if(tf(v['Cross Connections']))why.push('cross connection');if(tf(v.Interconnection))why.push('interconnection');list(v['What is Present']).forEach(x=>why.push(x));list(v.Substances).forEach(x=>why.push(x));
+ const n=nccScore(v),im=String(v.Impact||'').toLowerCase();
+ const ih=!why.length?0:!im?3:/death|serious|serial|severe/.test(im)?3:/illness|sick|disease/.test(im)?2:1;
+ const haz=HN[Math.max(HR[n.band],n.floor?3:0,ih)],risk=haz!='None';
+ const prot={None:'No backflow prevention required',Low:'Low hazard protection (non-testable device)',Medium:'DCVA at boundary (testable double check valve)',High:'RPZ or air gap at boundary'}[haz];
+ return{risk,haz,prot,col:{None:'#2e7d32',Low:'#1a7fc4',Medium:'#e6a117',High:'#c0392b'}[haz],why,n,impact:why.length&&!im}}
+const aHazCell=v=>{const r=assessResult(v);return `<span style="font-weight:600;color:${r.col}">${esc(r.haz)}</span>`};
+function aResUI(){const el=$('#aRes');if(!el)return;const v={};AH.forEach(k=>v[k]=aGet(k));const r=assessResult(v);
+ const fire=/fire/i.test(v['What is Present']||'')?'<div style="font-size:13px;color:#667;margin-top:6px">🔥 Fire service: needs a testable double check detector assembly (DCDA) on each fire connection</div>':'';
+ const valve=tf(v['BackflowValve Present'])?(tf(v.Testable)?'Backflow valve already fitted – testable':'Backflow valve already fitted – not testable'):'No backflow valve fitted yet';
+ el.innerHTML=`<div style="border-left:6px solid ${r.col};padding:10px 14px;background:#f7f9fb;border-radius:6px"><div style="font-size:13px;color:#667">${esc(v['Water Supply Authority']||'Water authority')} · Cross-connection risk: <b>${r.risk?'Yes':'No'}</b>${r.why.length?' ('+esc(r.why.slice(0,6).join(', '))+(r.why.length>6?'…':'')+')':''}</div>
+ <div style="margin-top:4px">Hazard rating: <b style="color:${r.col}">${esc(r.haz)}</b></div><div style="font-size:19px;font-weight:700;margin-top:4px;color:${r.col}">${esc(r.prot)}</div><div style="font-size:13px;color:#667;margin-top:6px">${valve}</div>${fire}
+ <div style="font-size:13px;color:#667;margin-top:8px;border-top:1px solid #dde;padding-top:6px">NCC B5V1 score <b>${r.n.total}</b> (${r.n.band}): building ${r.n.t.a} + on-site services ${r.n.t.b} + water use ${r.n.t.c} + cross-connection ${r.n.t.d} + extent ${r.n.t.e}${r.n.floor?'<br>Cooling tower / medical equipment is High by NCC Spec 41':''}${r.impact?'<br>Impact not picked – unknown hazard is treated as High':''}</div></div>`}
+$('#aGrid').addEventListener('click',()=>setTimeout(()=>{const v={};AH.forEach(k=>v[k]=aGet(k));if(document.activeElement&&!document.activeElement.matches('[data-f=Score],[data-step]'))aSet('Score',nccScore(v).total);aResUI()},0));$('#aGrid').addEventListener('input',e=>{if(!e.target.matches('[data-f=Score]')){const v={};AH.forEach(k=>v[k]=aGet(k));aSet('Score',nccScore(v).total)}setTimeout(aResUI,0)});
+$('#aq').oninput=drawA;$('#aNew').onclick=()=>openA({row:0,v:{}});$('#aRef').onclick=()=>loadAssess().then(()=>say('')).catch(e=>say(e.message));
+$('#aRows').onclick=e=>{const tr=e.target.closest('tr[data-r]');if(tr)openA(arecs.find(r=>r.row==tr.dataset.r))};
+$('#aBack').onclick=()=>show('aPg');$('#aSave').onclick=saveA;$('#aDel').onclick=delA;$('#aCopy').onclick=()=>openA(acur,true);
+$('#tabs [data-t=aPg]').addEventListener('click',drawA);
 // ---- wire up
 $('#bIn').onclick=()=>auth();$('#bRef').onclick=load;$('#q').oninput=draw;
 $('#bSet').onclick=()=>{let d=document.getElementById('setDlg');if(d)d.remove();d=document.createElement('div');d.id='setDlg';d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:99999';
