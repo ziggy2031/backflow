@@ -21,7 +21,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:rgba(47,123,208,.1)}
 .seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}.seg button.on.f{background:var(--bad);border-color:var(--bad)}
 .bar{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}.bar input{max-width:360px}
 .pass{color:var(--ok);font-weight:600}.fail{color:var(--bad);font-weight:600}
-#msg{font-size:13px;color:var(--mu)}#aGrid .sec{margin-bottom:12px}.stp{display:flex;gap:6px}.stp input{text-align:center;flex:1}.stp button{min-width:44px}.seg .addo{border-style:dashed;color:var(--mu)}header #bPend{background:#e6a117;border-color:#e6a117;color:#fff;font-weight:600}
+#msg{font-size:13px;color:var(--mu)}#aGrid .sec{margin-bottom:12px}#aGrid .seg{flex-wrap:wrap;gap:4px}#aGrid .seg button,#aGrid .seg button:first-child,#aGrid .seg button:last-child{border-radius:6px;white-space:normal;flex:1 1 auto;min-width:0}.stp{display:flex;gap:6px}.stp input{text-align:center;flex:1}.stp button{min-width:44px}.seg .addo{border-style:dashed;color:var(--mu)}header #bPend{background:#e6a117;border-color:#e6a117;color:#fff;font-weight:600}
 #rep{background:#fff;color:#000;padding:15mm;max-width:210mm;margin:0 auto;font:13px/1.25 Arial,Helvetica,sans-serif}
 #rep .hd{display:flex;justify-content:space-between;align-items:center;text-align:center}#rep .hd img{height:85px;width:170px;object-fit:contain}#rep .hd img.l{object-position:left center}#rep .hd img.r{object-position:right center}
 #rep h3{text-align:center;text-decoration:underline;margin:22px 0 14px;font-size:14px}#rep .sig{height:38px}#rep .ph{max-height:55mm;max-width:75mm;margin-top:6px}
@@ -62,7 +62,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 @page{size:A4;margin:0}
 @media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#aPg,#aForm,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.0</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.2</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
 <nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button><button data-t="aPg">🏠 Assessment</button></nav>
 <section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
@@ -83,7 +83,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 <table><thead><tr><th>Due</th><th>Status</th><th>Address</th><th>Use</th><th>Serial</th><th>Contact</th><th></th></tr></thead><tbody id="dueRows"></tbody></table></section>
 <section id="aPg" hidden><div class="bar"><input id="aq" placeholder="Search assessments…"><button id="aNew" class="p">+ New assessment</button><button id="aRef">Refresh</button></div>
 <table><thead><tr><th>Date</th><th>Address</th><th>Use</th><th>Status</th><th>Hazard</th><th>Score</th></tr></thead><tbody id="aRows"></tbody></table></section>
-<section id="aForm" hidden><div class="bar"><button id="aBack">← Back</button><button id="aSave" class="p">Save</button><button id="aCopy">Copy as new</button><button id="aDel" class="d" hidden>🗑 Delete</button></div><div id="aGrid"></div></section>
+<section id="aForm" hidden><div class="bar"><button id="aBack">← Back</button><button id="aSave" class="p">Save</button><button id="aCopy">Copy as new</button><button id="aRep">🖨 Report</button><button id="aDel" class="d" hidden>🗑 Delete</button></div><div id="aGrid"></div></section>
 <section id="form" hidden><div class="bar"><button id="bBack">← Back</button><button id="bSave" class="p">Save</button><button id="bCopy">Copy as new</button><button id="bRep">Report</button><button id="bHist">📊 History</button><button id="bSW">📤 Sydney Water</button><button id="bDel" class="d" hidden>🗑 Delete</button></div><div class="grid" id="grid"></div></section>
 <section id="report" hidden><div class="bar"><button id="bBack2">← Back</button><button id="bPrint" class="p">Print / Save PDF</button></div><div id="rep"></div></section>
 </main>
@@ -266,7 +266,8 @@ async function photo(path,el){try{const n=path.split('/').pop();
  const x=await fetch(`https://www.googleapis.com/drive/v3/files/${r.files[0].id}?alt=media`,{headers:{Authorization:'Bearer '+tok}});
  const bm=await createImageBitmap(await x.blob());const rot=bm.height>bm.width;const c=document.createElement('canvas');c.width=rot?bm.height:bm.width;c.height=rot?bm.width:bm.height;
  const g=c.getContext('2d');if(rot){g.translate(c.width,0);g.rotate(Math.PI/2)}g.drawImage(bm,0,0);el.src=c.toDataURL('image/jpeg',0.9);el.style.display=''}catch(e){}}
-function report(){const v0={};H.forEach(k=>v0[k]=k=='Image'?(cur.v.Image||''):getF(k));const set=[{v:v0}];
+let repFrom='list';
+function report(){repFrom='list';const v0={};H.forEach(k=>v0[k]=k=='Image'?(cur.v.Image||''):getF(k));const set=[{v:v0}];
  const e=esc,kp=x=>x===''||x==null?'':e(x)+'kPa',pr=x=>x===''||x==null?'':(+x).toFixed(2)+' kPa';
  $('#rep').innerHTML=set.map(r=>{const v=r.v,rpz=v.Type=='RPZ';return `<div class="cert">
  <div class="hd"><img class="l" src="sydneywater.svg" onerror="this.style.visibility='hidden'"><div><b><i><u>${e(CFG.name)}</u></i></b><br>Accredited Backflow Plumber<br>Mobile: ${e(CFG.mobile)}<br>Email: <u style="color:#1155cc">${e(CFG.email)}</u></div><img class="r" src="logo.png" onerror="this.style.visibility='hidden'"></div>
@@ -461,6 +462,7 @@ $('#aGrid').onclick=e=>{const b=e.target.closest('button');if(!b)return;
 function openA(rec,copy){buildA();acur=copy?{row:0,v:{...rec.v}}:rec;const v=acur.v;AH.forEach(k=>aSet(k,v[k]));
  if(!acur.row){aSet('Date',fd(new Date()));aSet('DateLastTest','');if(!copy){aSet('Water Supply Authority','Sydney Water');aSet('Assesor Name',CFG.person);aSet('Score',0)}}
  if(!aGet('License No'))aSet('License No',CFG.lic);if(!aGet('Assesor Name'))aSet('Assesor Name',CFG.person);if(aGet('Score')==='')aSet('Score',0);
+ if(!+aGet('Score')){const v={};AH.forEach(k=>v[k]=aGet(k));aSet('Score',nccScore(v).total)}
  aResUI();$('#aDel').hidden=!acur.row;show('aForm');scrollTo(0,0)}
 function drawA(){const q=$('#aq').value.toLowerCase();
  const L=arecs.filter(r=>!q||Object.values(r.v).join(' ').toLowerCase().includes(q)).sort((a,b)=>pd(b.v.Date)-pd(a.v.Date)||b.row-a.row);
@@ -520,6 +522,37 @@ $('#aq').oninput=drawA;$('#aNew').onclick=()=>openA({row:0,v:{}});$('#aRef').onc
 $('#aRows').onclick=e=>{const tr=e.target.closest('tr[data-r]');if(tr)openA(arecs.find(r=>r.row==tr.dataset.r))};
 $('#aBack').onclick=()=>show('aPg');$('#aSave').onclick=saveA;$('#aDel').onclick=delA;$('#aCopy').onclick=()=>openA(acur,true);
 $('#tabs [data-t=aPg]').addEventListener('click',drawA);
+
+// ---- assessment report (1 page)
+function aReport(){const v={};AH.forEach(k=>v[k]=aGet(k));const r=assessResult(v),e=esc,yn=x=>tf(x)?'Yes':'No',n=r.n;
+ const sev=r.haz=='High'?'bad':r.haz=='None'||r.haz=='Low'?'ok':'';
+ const fire=/fire/i.test(v['What is Present']||'')?'<br>Fire service present: a testable double check detector assembly (DCDA) is required on each fire connection.':'';
+ const valve=tf(v['BackflowValve Present'])?(tf(v.Testable)?'Backflow valve fitted – testable':'Backflow valve fitted – not testable')+(v.DateLastTest?' (last tested '+e(v.DateLastTest)+')':''):'No backflow valve fitted';
+ repFrom='aForm';
+ $('#rep').innerHTML=`<div class="cert">
+ <div class="hd"><img class="l" src="sydneywater.svg" onerror="this.style.visibility='hidden'"><div><b><i><u>${e(CFG.name)}</u></i></b><br>Accredited Backflow Plumber<br>Mobile: ${e(CFG.mobile)}<br>Email: <u style="color:#1155cc">${e(CFG.email)}</u></div><img class="r" src="logo.png" onerror="this.style.visibility='hidden'"></div>
+ <h3>Backflow Risk Assessment</h3>
+ <table class="t"><tr><th>Date</th><td>${e(v.Date)}</td><th>Property #</th><td>${e(v['Property No.'])}</td></tr>
+ <tr><th>Address</th><td colspan=3>${e(v['Property Address'])}</td></tr>
+ <tr><th>Property use</th><td>${e(v.PropertyUse)}</td><th>Status</th><td>${e(v['Property Status'])}</td></tr>
+ <tr><th>Water authority</th><td>${e(v['Water Supply Authority'])}</td><th>Meter</th><td>${e((v['Meter No.']||'NA').toUpperCase())}</td></tr>
+ <tr><th>Assessor</th><td>${e(v['Assesor Name'])}</td><th>Licence</th><td>${e(v['License No'])}</td></tr></table>
+ <table class="t"><tr><th>Water supply</th><td>${e(v['Type of Water Supply'])}</td><th>Multiple meters</th><td>${yn(v['Multiple Meters'])}</td></tr>
+ <tr><th>Interconnection</th><td>${yn(v.Interconnection)}</td><th>Submerged inlets</th><td>${yn(v.Submerged)}</td></tr>
+ <tr><th>Cross connections</th><td>${yn(v['Cross Connections'])}</td><th>Impact</th><td>${e(v.Impact||'–')}</td></tr>
+ <tr><th>Back pressure</th><td>${yn(v['Back Pressure'])}</td><th>Back siphonage</th><td>${yn(v.Siphonage)}</td></tr>
+ <tr><th>Present on site</th><td colspan=3>${e(v['What is Present']||'–')}</td></tr>
+ <tr><th>Substances</th><td colspan=3>${e(v.Substances||'–')}</td></tr>
+ <tr><th>Existing valve</th><td colspan=3>${e(valve)}</td></tr></table>
+ <table class="t"><tr><th>Building class</th><td>${n.t.a}</td><th>On-site services</th><td>${n.t.b}</td></tr>
+ <tr><th>Drinking water use</th><td>${n.t.c}</td><th>Cross-connection type</th><td>${n.t.d}</td></tr>
+ <tr><th>Extent of contamination</th><td>${n.t.e}</td><th>NCC B5V1 total score</th><td><b>${n.total}</b> (${n.band})</td></tr></table>
+ <div class="rs ${sev}" style="${sev?'':'color:#e6a117;border-color:#e6a117'}">Hazard rating: ${e(r.haz)}<div style="font-size:15px;font-weight:600;margin-top:3px">${e(r.prot)}</div></div>
+ <div style="font-size:12px;color:#444">${n.floor?'Cooling tower / medical equipment is rated High under NCC Specification 41.<br>':''}${r.impact?'Impact not recorded – an unknown hazard is treated as High.<br>':''}${fire.replace(/^<br>/,'')}</div>
+ <br><div style="font-size:12.5px">I certify that this assessment was carried out with reference to AS/NZS 3500.1:2021, AS/NZS 2845.3:2020 and NCC 2022 Volume Three Part B5.</div><br>Colin Bell<br>
+ <img src="signature.png" class="sig" onerror="this.style.display='none'"></div>`;
+ show('report')}
+$('#aRep').onclick=aReport;
 // ---- wire up
 $('#bIn').onclick=()=>auth();$('#bRef').onclick=load;$('#q').oninput=draw;
 $('#bSet').onclick=()=>{let d=document.getElementById('setDlg');if(d)d.remove();d=document.createElement('div');d.id='setDlg';d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:99999';
@@ -528,7 +561,7 @@ $('#bSet').onclick=()=>{let d=document.getElementById('setDlg');if(d)d.remove();
  d.querySelector('#setOut').onclick=()=>{localStorage.removeItem('bf_rt');sessionStorage.removeItem('bf_tok');sessionStorage.removeItem('bf_exp');tok='';tokExp=0;$('#bIn').textContent='Sign in';d.remove();say('Signed out')};
  d.querySelector('#setOk').onclick=()=>{CFG.client=i.value.trim();CFG.secret=sc.value.trim();localStorage.setItem('bf_cfg',JSON.stringify(CFG));tc=null;d.remove()}};
 $('#rows').onclick=e=>{const tr=e.target.closest('tr');if(tr)open(recs.find(r=>r.row==tr.dataset.r))};
-$('#bNew').onclick=()=>open({row:0,v:{}});$('#bBack').onclick=$('#bBack2').onclick=()=>show('list');
+$('#bNew').onclick=()=>open({row:0,v:{}});$('#bBack').onclick=()=>show('list');$('#bBack2').onclick=()=>show(repFrom);
 $('#bSave').onclick=save;$('#bDel').onclick=delT;$('#bCopy').onclick=()=>open(cur,true);$('#bRep').onclick=report;$('#bPrint').onclick=()=>print();
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{show(b.dataset.t);if(b.dataset.t=='due')drawDue();if(b.dataset.t=='mapPg'&&initMap()){drawMap();geocodeAll()}if(b.dataset.t=='gaugePg')openGauge();if(b.dataset.t=='clients'&&tok&&!cl.length)loadClients().catch(e=>say(e.message))});$('#dueWin').onchange=$('#dueOld').onchange=drawDue;
 $('#dueRows').onclick=e=>{if(e.target.closest('a'))return;const hb=e.target.closest('[data-hist]');if(hb){openHist(recs.find(r=>r.row==hb.dataset.hist).v,'due');return}const rt=e.target.closest('[data-retest]');if(rt){open(recs.find(r=>r.row==rt.dataset.retest),true);return}const tr=e.target.closest('tr');if(tr)open(recs.find(r=>r.row==tr.dataset.r))};
