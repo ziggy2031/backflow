@@ -25,6 +25,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:rgba(47,123,208,.1)}
 #rep{background:#fff;color:#000;padding:15mm;max-width:210mm;margin:0 auto;font:13px/1.25 Arial,Helvetica,sans-serif}
 #rep .hd{display:flex;justify-content:space-between;align-items:center;text-align:center}#rep .hd img{height:85px;width:170px;object-fit:contain}#rep .hd img.l{object-position:left center}#rep .hd img.r{object-position:right center}
 #rep h3{text-align:center;text-decoration:underline;margin:22px 0 14px;font-size:14px}#rep .sig{height:38px}#rep .ph{max-height:55mm;max-width:75mm;margin-top:6px}
+.dd{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23667' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center;padding-right:34px}.sgb{position:absolute;left:0;right:0;top:100%;z-index:40;background:#fff;border:1px solid #9ab;border-radius:6px;max-height:240px;overflow:auto;box-shadow:0 6px 16px rgba(0,0,0,.2)}.sgb div{padding:11px 12px;border-bottom:1px solid #eef;cursor:pointer;font-size:15px}.sgb div:active,.sgb div:hover{background:#e8f1fb}
 #rep .t{width:100%;border-collapse:collapse;margin:8px 0;background:#fff}#rep .t th,#rep .t td{border:1px solid #bbb;padding:4px 7px;text-align:left;font-size:12.5px;white-space:normal;max-width:none}
 #rep .t th{background:#eef1f4;width:18%;font-weight:600}
 #rep .rs{text-align:center;font-weight:700;font-size:18px;padding:7px;margin:8px 0;border:2px solid}#rep .rs.ok{color:#2e8b3d;border-color:#2e8b3d}#rep .rs.bad{color:#c0392b;border-color:#c0392b}
@@ -62,7 +63,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 @page{size:A4;margin:0}
 @media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#aPg,#aForm,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.2</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.4</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
 <nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button><button data-t="aPg">🏠 Assessment</button></nav>
 <section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
@@ -221,13 +222,13 @@ function build(){const SECS=[['🏠 Site & client',['Date','Address','Property #
  else if(h=='Type')i=`<select data-f="${h}">${['RPZ','DCV','DCDA','PVB','SVB'].map(o=>`<option>${o}`).join('')}</select>`;
  else if(h=='Date'||h=='GaugeDateTested')i=`<input type="date" data-f="${h}" data-date="1">`;
  else if(h=='Notes')i=`<textarea rows=2 data-f="${h}"></textarea>`;
- else if(h=='Image')i=`<input type="file" accept="image/*" id="img"><div id="imgn" style="font-size:12px;color:var(--mu)"></div>`;
- else i=`<input data-f="${h}" ${NUM.includes(h)&&h!='Size'?'type="number" step="any"':''} ${h=='Brand'?'list="dl-b"':''} ${h=='Address'?'list="dl-a" autocomplete="off"':''}>`;
+ else if(h=='Image')i=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="imgcB" class="p">📷 Take photo</button><button type="button" id="imgB">🖼 Choose file</button></div><input type="file" accept="image/*" capture="environment" id="imgc" hidden><input type="file" accept="image/*" id="img" hidden><div id="imgn" style="font-size:13px;color:var(--mu);margin-top:4px"></div>`;
+ else i=`<input data-f="${h}" ${NUM.includes(h)&&h!='Size'?'type="number" step="any"':''} ${h=='Brand'||h=='Bypass DCV Brand'?'class="dd" autocomplete="off"':''} ${h=='Address'?'autocomplete="off"':''}>`;
  return `<div class="${['Address','Notes','Device Purpose','Connection Type'].includes(h)?'w2':''}" data-w="${h}"><label>${h}</label>${i}</div>`};
  $('#grid').innerHTML=SECS.map(([t,l])=>`<div class="sec"><h4>${t}</h4><div class="g">${l.map(fld).join('')}</div></div>`).join('');
  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{const s=b.parentNode;if(s.dataset.m){b.classList.toggle('on');return}[...s.children].forEach(x=>x.classList.remove('on','f'));
   if(s.dataset.f=='Test Type'||s.dataset.f=='Strainer'||true)b.classList.add('on');if(b.dataset.o=='FAIL'||b.dataset.o=='Leak')b.classList.add('f')});
- document.querySelectorAll('[data-f="Meter #"],[data-f="Bypass Meter No."],[data-f="Serial #"]').forEach(i=>i.oninput=()=>{const p=i.selectionStart;i.value=i.value.toUpperCase();i.setSelectionRange(p,p)});$('[data-f=Type]').onchange=vis;let t;$('[data-f=Address]').oninput=e=>{clearTimeout(t);const v=e.target.value;if(v.length<5)return;
+ document.querySelectorAll('[data-f="Meter #"],[data-f="Bypass Meter No."],[data-f="Serial #"]').forEach(i=>i.oninput=()=>{const p=i.selectionStart;i.value=i.value.toUpperCase();i.setSelectionRange(p,p)});$('[data-f=Type]').onchange=vis;suggestTests();let t;$('[data-f=Address]').oninput=e=>{return;
   t=setTimeout(async()=>{try{const r=await(await fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=au&limit=5&q='+encodeURIComponent(v))).json();
    $('#dl-a').innerHTML=r.map(x=>`<option>${esc(x.display_name.replace(/, (City of|Council).*?,/,',').slice(0,120))}`).join('')}catch(e){}},500)};
  $('[data-f=Address]').onchange=e=>{const m=recs.filter(r=>r.v.Address==e.target.value).sort((a,b)=>pd(b.v.Date)-pd(a.v.Date))[0];
@@ -241,15 +242,15 @@ function getF(k){const e=$(`[data-f="${k}"]`);if(!e)return'';if(e.classList.cont
 function open(rec,copy){cur=copy?{row:0,v:{...rec.v}}:rec;const v=cur.v;H.forEach(k=>{if(k!='Image'&&k!='Dummy')setF(k,v[k])});
  if(copy){KEEP_CLEAR.forEach(k=>{if(k!='Image')setF(k,'')});setF('Date',fd(new Date()));for(const k in gauge)setF(k,gauge[k]);cur.v.Image=''}
  if(!rec.row&&!copy){for(const k in gauge)setF(k,gauge[k]);setF('Date',fd(new Date()));setF('Test Type','Annual');setF('Strainer','YES')}
- $('#img').value='';$('#imgn').textContent=cur.v.Image||'';vis();$('#bDel').hidden=!cur.row;show('form');scrollTo(0,0)}
+ clearImg();$('#imgn').textContent=cur.v.Image||'';vis();$('#bDel').hidden=!cur.row;show('form');scrollTo(0,0)}
 async function save(){say('Saving…');try{const v={};H.forEach(k=>v[k]=k=='Image'?cur.v.Image||'':k=='Dummy'?'0':(k=='Meter #'||k=='Bypass Meter No.'||k=='Serial #')?getF(k).toUpperCase():getF(k));
  for(const k of ['Date','Address','Property #','Type']) if(!v[k])throw Error(k+' is required');
- const f=$('#img').files[0],Q=await qAll();let it=cur.row<0?Q.find(x=>x.id==-cur.row):cur.row>0?Q.find(x=>x.row==cur.row&&x.k!='a'):null;
+ const f=imgFile(),Q=await qAll();let it=cur.row<0?Q.find(x=>x.id==-cur.row):cur.row>0?Q.find(x=>x.row==cur.row&&x.k!='a'):null;
  if(!it)it={row:Math.max(cur.row,0),key:cur.row>0?[cur.v.Date,cur.v.Address,cur.v['Serial #']].map(z=>z??'').join('|'):''};
  it.v=v;delete it.err;if(f){it.img=f;it.imgName=`${fd(new Date()).replace(/\//g,'')}.Image.${Date.now()}.jpg`}
  const id=await qPut(it);if(!it.id)it.id=id;
  const nr=cur.row>0?cur.row:-it.id,rec={row:nr,v,pending:1},i=recs.findIndex(r=>r.row==nr);i<0?recs.push(rec):recs[i]=rec;cur=rec;
- $('#img').value='';draw();await pendUI();show('list');say('');
+ clearImg();draw();await pendUI();show('list');say('');
  await sync();
  const left=(await qAll()).find(x=>x.id==it.id);
  if(!left)toast('Saved ✔');else if(left.err)alert('Saved on your phone, but Google said no:\n'+left.err);else toast('📱 Saved on phone – will sync when you have signal')}catch(e){say('');alert('Save failed: '+e.message)}}
@@ -390,7 +391,7 @@ function openSW(conn){const v={};H.forEach(k=>v[k]=getF(k));v.Image=cur.v.Image|
   note(isM?'Next, the portal asks you to choose the Sydney Water meter.':isF?'Portal: “There is 1 Fire Service connection on this property” – click Next, then choose the device.':'Choosing boundary means the device is <b>before/upstream</b> of the Sydney Water meters onsite.')])+
  sec('3 · Test — Device',dev)+
  sec('3 · Test — Test details',[swRow('Date tested',v.Date,1,age>30?'⚠ portal rejects tests more than 30 days old ('+age+' days)':''),swRow('Test result',v.Result=='PASS'?'Pass':v.Result=='FAIL'?'Fail':'',1),
-  `<div class="swr"><span class="swl">Declarations</span><span class="swv">Tick both boxes.<small>${v.Image||$('#img').files[0]?'✔ photo saved on this test':'⚠ no photo on this test – evidence must show your gauge attached and the serial number'}</small></span></div>`])+
+  `<div class="swr"><span class="swl">Declarations</span><span class="swv">Tick both boxes.<small>${v.Image||imgFile()?'✔ photo saved on this test':'⚠ no photo on this test – evidence must show your gauge attached and the serial number'}</small></span></div>`])+
  sec('4 · Review – check the preview matches',[...(isM?[swRow('Meter number',ok?meter:'')]:[]),swRow('Size',v.Size?v.Size+'mm':''),swRow('Device type',v.Type),swRow('Testing gauge make',v.Gauge),swRow('Gauge serial number',v.GaugeSerial),swRow('Date last calibrated',v.GaugeDateTested),swRow('Licence number',CFG.lic),swRow('Trading name',CFG.name),swRow('Contact number',(CFG.mobile||'').replace(/\s/g,'')),swRow('Name',CFG.person)])+
  (isM?'':note('I’ve only seen the portal up to the device choice for this connection type. I’ve assumed the screens after it (location, model, summary, test details) match the meter flow – tell me if they differ.'));
  $('#swConn').onchange=e=>openSW(e.target.value);show('swPg');scrollTo(0,0)}
@@ -412,7 +413,7 @@ if('serviceWorker' in navigator&&location.protocol.startsWith('http')&&!window.b
 const AH=['Property Address','PropertyUse','Property No.','Property Status','Meter No.','Water Supply Authority','Date','Assesor Name','License No','Type of Water Supply','Multiple Meters','Interconnection','What is Present','Submerged','Impact','Substances','Cross Connections','Back Pressure','Siphonage','BackflowValve Present','Testable','DateLastTest','Score'];
 const AREQ=['Property Address','Date','Multiple Meters','Interconnection','What is Present','Submerged','Substances','Cross Connections','Back Pressure','Siphonage','BackflowValve Present','Testable'];
 const AYN=['Multiple Meters','Interconnection','Submerged','Cross Connections','Back Pressure','Siphonage','BackflowValve Present','Testable'];
-const ALBL={'Assesor Name':'Assessor Name','License No':'Licence No'};
+const ALBL={'Assesor Name':'Assessor Name','License No':'Licence No',Submerged:'Submerged inlets'};
 const ASEED={PropertyUse:['Residential Single Dwelling','Residential Multi Dwelling','Commercial','Industrial'],'Property Status':['Existing Property','New Property'],
  'What is Present':['Fire Service','Boiler or Heating services','Cooling towers or Evaporative coolers','Medical or Laboratory equipment','Swimming pools or Spa'],
  Impact:['Serious illness or Death','Illness'],Substances:['Chemicals or solvents','Medical or Pharmaceutical substances']};
@@ -439,12 +440,12 @@ function buildA(){const seg=(k,opts,m)=>`<div class="seg" data-f="${k}" ${m?'dat
   else if(k=='Date'||k=='DateLastTest')i=`<input type="date" data-f="${k}" data-date="1">`;
   else if(k=='Score')i=`<div class="stp"><button type="button" data-step="-1">−</button><input type="number" step="1" data-f="Score"><button type="button" data-step="1">+</button></div>`;
   else if(k=='License No')i=`<input data-f="${k}" readonly style="background:#f1f3f5;color:#667">`;
-  else i=`<input data-f="${k}" ${k=='Property Address'?'list="dl-a" autocomplete="off"':''}>`;
+  else i=`<input data-f="${k}" ${k=='Property Address'?'autocomplete="off"':''}>`;
   return `<div class="${['Property Address','PropertyUse','What is Present','Substances','Type of Water Supply','Water Supply Authority','Property Status','Impact'].includes(k)?'w2':''}"><label>${ALBL[k]||k}${AREQ.includes(k)?' <span style="color:#c0392b">*</span>':''}</label>${i}</div>`};
  const SEC=[['🏠 Property',['Property Address','PropertyUse','Property No.','Property Status','Meter No.','Water Supply Authority']],['📝 Assessment',['Date','Assesor Name','License No','Type of Water Supply','Multiple Meters','Interconnection','What is Present','Submerged','Impact','Substances']],['⚠ Hazard',['Cross Connections','Back Pressure','Siphonage','BackflowValve Present','Testable','DateLastTest','Score']]];
  $('#aGrid').innerHTML=SEC.map(([t,l])=>`<div class="sec"><h4>${t}</h4><div class="g">${l.map(fld).join('')}</div></div>`).join('')+'<div class="sec"><h4>📋 Result</h4><div id="aRes"></div></div>';
- const mi=aE('Meter No.');mi.oninput=()=>{const p=mi.selectionStart;mi.value=mi.value.toUpperCase();mi.setSelectionRange(p,p)};
- let t;const ad=aE('Property Address');ad.oninput=e=>{clearTimeout(t);const v=e.target.value;if(v.length<5)return;
+ suggestAssess();const mi=aE('Meter No.');mi.oninput=()=>{const p=mi.selectionStart;mi.value=mi.value.toUpperCase();mi.setSelectionRange(p,p)};
+ let t;const ad=aE('Property Address');ad.oninput=e=>{return;
   t=setTimeout(async()=>{try{const r=await(await fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=au&limit=5&q='+encodeURIComponent(v))).json();
    $('#dl-a').innerHTML=r.map(x=>`<option>${esc(x.display_name.replace(/, (City of|Council).*?,/,',').slice(0,120))}`).join('')}catch(e){}},500)};
  ad.onchange=e=>{const a=e.target.value,m=arecs.filter(r=>r.v['Property Address']==a)[0],tt=recs.filter(r=>r.v.Address==a)[0];
@@ -553,6 +554,25 @@ function aReport(){const v={};AH.forEach(k=>v[k]=aGet(k));const r=assessResult(v
  <img src="signature.png" class="sig" onerror="this.style.display='none'"></div>`;
  show('report')}
 $('#aRep').onclick=aReport;
+
+// ---- suggestion dropdowns (address lookup, brand list) + photo from camera
+const BRANDS=['Watts','Wilkins','Zurn','Apollo','Conbraco','Febco','Flowmatic','Ames','Caleffi','Tyco','Valvcheq','Valvtec','RMC','BEECO'];
+function brandList(){const o=[];[...BRANDS,...recs.map(r=>r.v.Brand),...recs.map(r=>r.v['Bypass DCV Brand'])].forEach(b=>{b=String(b||'').trim();if(b.length>1&&!o.some(x=>x.toLowerCase()==b.toLowerCase()))o.push(b)});return o.sort((a,b)=>a.localeCompare(b))}
+const brandItems=q=>{const L=brandList(),l=q.trim().toLowerCase();return l&&!L.some(b=>b.toLowerCase()==l)?L.filter(b=>b.toLowerCase().includes(l)):L};
+let adT;const addrItems=q=>new Promise(res=>{clearTimeout(adT);q=q.trim();if(q.length<4)return res([]);
+ adT=setTimeout(async()=>{try{const r=await(await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=au&limit=6&viewbox=150.6,-33.5,151.6,-34.2&q='+encodeURIComponent(q))).json();
+  res([...new Set(r.map(x=>{const a=x.address||{},st=[a.house_number,a.road].filter(Boolean).join(' '),sub=a.suburb||a.city_district||a.town||a.city||a.village||'',S=a.state=='New South Wales'?'NSW':(a.state||'');
+   return a.road?`${st}, ${sub} ${S} ${a.postcode||''}, Australia`.replace(/\s+/g,' ').replace(', ,',','):x.display_name.replace(/, (City of|Council).*?,/,',').slice(0,120)}))])}catch(e){res([])}},350)});
+function suggest(inp,items){if(!inp||inp._sg)return;inp._sg=1;const box=document.createElement('div');box.className='sgb';box.hidden=true;inp.parentNode.style.position='relative';inp.parentNode.appendChild(box);let n=0;
+ const go=async()=>{const m=++n,L=await items(inp.value);if(m!=n)return;box.innerHTML=L.map(x=>`<div>${esc(x)}</div>`).join('');box.hidden=!L.length};
+ inp.addEventListener('input',go);inp.addEventListener('focus',go);inp.addEventListener('blur',()=>{n++;setTimeout(()=>box.hidden=true,250)});
+ box.addEventListener('pointerdown',e=>{const d=e.target.closest('div');if(!d)return;e.preventDefault();n++;inp.value=d.textContent;box.hidden=true;inp.dispatchEvent(new Event('change',{bubbles:true}))})}
+function suggestTests(){suggest($('[data-f=Address]'),addrItems);suggest($('[data-f=Brand]'),brandItems);suggest($('[data-f="Bypass DCV Brand"]'),brandItems)}
+function suggestAssess(){suggest(aE('Property Address'),addrItems)}
+const imgFile=()=>($('#imgc')&&$('#imgc').files[0])||($('#img')&&$('#img').files[0])||null;
+function clearImg(){['#img','#imgc'].forEach(q=>{if($(q))$(q).value=''})}
+document.addEventListener('click',e=>{if(e.target.id=='imgcB')$('#imgc').click();if(e.target.id=='imgB')$('#img').click()});
+document.addEventListener('change',e=>{if(e.target.id=='img'||e.target.id=='imgc'){const f=e.target.files[0];$('#imgn').textContent=f?'✔ '+(e.target.id=='imgc'?'Photo taken':'Photo chosen')+' – saves with the test':''}});
 // ---- wire up
 $('#bIn').onclick=()=>auth();$('#bRef').onclick=load;$('#q').oninput=draw;
 $('#bSet').onclick=()=>{let d=document.getElementById('setDlg');if(d)d.remove();d=document.createElement('div');d.id='setDlg';d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:99999';
