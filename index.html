@@ -63,7 +63,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 @page{size:A4;margin:0}
 @media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#aPg,#aForm,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.7</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.8</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
 <nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button><button data-t="aPg">🏠 Assessment</button></nav>
 <section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
@@ -243,7 +243,7 @@ function open(rec,copy){cur=copy?{row:0,v:{...rec.v}}:rec;const v=cur.v;H.forEac
  if(copy){KEEP_CLEAR.forEach(k=>{if(k!='Image')setF(k,'')});setF('Date',fd(new Date()));for(const k in gauge)setF(k,gauge[k]);cur.v.Image=''}
  if(!rec.row&&!copy){for(const k in gauge)setF(k,gauge[k]);setF('Date',fd(new Date()));setF('Test Type','Annual');setF('Strainer','YES')}
  clearImg();$('#imgn').textContent=cur.v.Image||'';vis();$('#bDel').hidden=!cur.row;show('form');scrollTo(0,0)}
-async function save(){say('Saving…');try{const v={};H.forEach(k=>v[k]=k=='Image'?cur.v.Image||'':k=='Dummy'?'0':(k=='Meter #'||k=='Bypass Meter No.'||k=='Serial #')?getF(k).toUpperCase():getF(k));
+async function save(){say('Saving…');try{const v={};H.forEach(k=>v[k]=k=='Image'?cur.v.Image||'':k=='Dummy'?'0':(k=='Meter #'||k=='Bypass Meter No.'||k=='Serial #')?getF(k).toUpperCase():k=='Size'?getF(k).replace(/\s*mm\s*$/i,''):getF(k));
  for(const k of ['Date','Address','Property #','Type']) if(!v[k])throw Error(k+' is required');
  const f=imgFile(),Q=await qAll();let it=cur.row<0?Q.find(x=>x.id==-cur.row):cur.row>0?Q.find(x=>x.row==cur.row&&x.k!='a'):null;
  if(!it)it={row:Math.max(cur.row,0),key:cur.row>0?[cur.v.Date,cur.v.Address,cur.v['Serial #']].map(z=>z??'').join('|'):''};
@@ -267,6 +267,7 @@ async function photo(path,el){try{const n=path.split('/').pop();
  const x=await fetch(`https://www.googleapis.com/drive/v3/files/${r.files[0].id}?alt=media`,{headers:{Authorization:'Bearer '+tok}});
  const bm=await createImageBitmap(await x.blob());const rot=bm.height>bm.width;const c=document.createElement('canvas');c.width=rot?bm.height:bm.width;c.height=rot?bm.width:bm.height;
  const g=c.getContext('2d');if(rot){g.translate(c.width,0);g.rotate(Math.PI/2)}g.drawImage(bm,0,0);el.src=c.toDataURL('image/jpeg',0.9);el.style.display=''}catch(e){}}
+const mm=x=>{x=String(x==null?'':x).replace(/\s*mm\s*$/i,'').trim();return x?x+'mm':''};
 let repFrom='list';
 function report(){repFrom='list';const v0={};H.forEach(k=>v0[k]=k=='Image'?(cur.v.Image||''):getF(k));const set=[{v:v0}];
  const e=esc,kp=x=>x===''||x==null?'':e(x)+'kPa',pr=x=>x===''||x==null?'':(+x).toFixed(2)+' kPa';
@@ -280,7 +281,7 @@ function report(){repFrom='list';const v0={};H.forEach(k=>v0[k]=k=='Image'?(cur.
  <table class="t"><tr><th>Test Type</th><td>${e(v['Test Type'])}</td><th>Device Purpose</th><td>${e(v['Device Purpose'])}</td></tr>
  <tr><th>Device Location</th><td>${e(v.Location)}</td><th>Device Use</th><td>${e(v['Device Use'])}</td></tr>
  <tr><th>Valve Type</th><td>${e(v.Type)}</td><th>Brand / Model</th><td>${e(v.Brand)} ${e(v.Model)}</td></tr>
- <tr><th>Serial</th><td>${e((v['Serial #']||'').toUpperCase())}</td><th>Size</th><td>${e(v.Size)}mm</td></tr>
+ <tr><th>Serial</th><td>${e((v['Serial #']||'').toUpperCase())}</td><th>Size</th><td>${e(mm(v.Size))}</td></tr>
  <tr><th>Strainer?</th><td>${e(v.Strainer)}</td><th>Meter</th><td>${e((v['Meter #']||'NA').toUpperCase())}</td></tr></table>
  <table class="t"><tr><th>Incoming Pressure</th><td>${pr(v['Inlet Pressure'])}</td><th>Downstream isolating valve</th><td>${e(v['Downstream isolating valve'])}</td></tr>
  <tr><th>Check 1</th><td>${kp(v.Check1)}</td><th>Check 2</th><td>${kp(v.Check2)}</td></tr>
@@ -392,7 +393,7 @@ function openSW(conn){const v={};H.forEach(k=>v[k]=getF(k));v.Image=cur.v.Image|
  sec('3 · Test — Device',dev)+
  sec('3 · Test — Test details',[swRow('Date tested',v.Date,1,age>30?'⚠ portal rejects tests more than 30 days old ('+age+' days)':''),swRow('Test result',v.Result=='PASS'?'Pass':v.Result=='FAIL'?'Fail':'',1),
   `<div class="swr"><span class="swl">Declarations</span><span class="swv">Tick both boxes.<small>${v.Image||imgFile()?'✔ photo saved on this test':'⚠ no photo on this test – evidence must show your gauge attached and the serial number'}</small></span></div>`])+
- sec('4 · Review – check the preview matches',[...(isM?[swRow('Meter number',ok?meter:'')]:[]),swRow('Size',v.Size?v.Size+'mm':''),swRow('Device type',v.Type),swRow('Testing gauge make',v.Gauge),swRow('Gauge serial number',v.GaugeSerial),swRow('Date last calibrated',v.GaugeDateTested),swRow('Licence number',CFG.lic),swRow('Trading name',CFG.name),swRow('Contact number',(CFG.mobile||'').replace(/\s/g,'')),swRow('Name',CFG.person)])+
+ sec('4 · Review – check the preview matches',[...(isM?[swRow('Meter number',ok?meter:'')]:[]),swRow('Size',v.Size?mm(v.Size):''),swRow('Device type',v.Type),swRow('Testing gauge make',v.Gauge),swRow('Gauge serial number',v.GaugeSerial),swRow('Date last calibrated',v.GaugeDateTested),swRow('Licence number',CFG.lic),swRow('Trading name',CFG.name),swRow('Contact number',(CFG.mobile||'').replace(/\s/g,'')),swRow('Name',CFG.person)])+
  (isM?'':note('I’ve only seen the portal up to the device choice for this connection type. I’ve assumed the screens after it (location, model, summary, test details) match the meter flow – tell me if they differ.'));
  $('#swConn').onchange=e=>openSW(e.target.value);show('swPg');scrollTo(0,0)}
 // ---- one-time fill of Connection Type
