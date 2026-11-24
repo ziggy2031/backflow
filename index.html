@@ -63,7 +63,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 @page{size:A4;margin:0}
 @media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#aPg,#aForm,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.5</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.6</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
 <nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button><button data-t="aPg">🏠 Assessment</button></nav>
 <section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
@@ -559,10 +559,17 @@ $('#aRep').onclick=aReport;
 const BRANDS=['Watts','Wilkins','Zurn','Apollo','Conbraco','Febco','Flowmatic','Ames','Caleffi','Tyco','Valvcheq','Valvtec','RMC','BEECO'];
 function brandList(){const o=[];[...BRANDS,...recs.map(r=>r.v.Brand),...recs.map(r=>r.v['Bypass DCV Brand'])].forEach(b=>{b=String(b||'').trim();if(b.length>1&&!o.some(x=>x.toLowerCase()==b.toLowerCase()))o.push(b)});return o.sort((a,b)=>a.localeCompare(b))}
 const brandItems=q=>{const L=brandList(),l=q.trim().toLowerCase();return l&&!L.some(b=>b.toLowerCase()==l)?L.filter(b=>b.toLowerCase().includes(l)):L};
-let adT;const addrItems=q=>new Promise(res=>{clearTimeout(adT);q=q.trim();if(q.length<4)return res([]);
- adT=setTimeout(async()=>{try{const r=await(await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=au&limit=6&viewbox=150.6,-33.5,151.6,-34.2&q='+encodeURIComponent(q))).json();const nm=q.match(/^(\d+[a-zA-Z]?(?:\s*[\/-]\s*\d+[a-zA-Z]?)?)(?:\s|,)/),num=nm?nm[1].replace(/\s+/g,''):'';
-  res([...new Set(r.map(x=>{const a=x.address||{},st=[num||a.house_number,a.road].filter(Boolean).join(' '),sub=a.suburb||a.city_district||a.town||a.city||a.village||'',S=a.state=='New South Wales'?'NSW':(a.state||'');
-   return a.road?`${st}, ${sub} ${S} ${a.postcode||''}, Australia`.replace(/\s+/g,' ').replace(', ,',','):x.display_name.replace(/, (City of|Council).*?,/,',').slice(0,120)}))])}catch(e){res([])}},350)});
+let adT;const addrItems=q=>new Promise(res=>{clearTimeout(adT);q=q.trim();if(q.length<3)return res([]);
+ adT=setTimeout(async()=>{
+  const nm=q.match(/^(\d+[a-zA-Z]?(?:\s*[\/-]\s*\d+[a-zA-Z]?)?)(?:\s|,|$)/),num=nm?nm[1].replace(/\s+/g,''):'',ST=x=>x=='New South Wales'?'NSW':(x||'NSW'),out=[];
+  const add=(street,sub,state,pc,full)=>{const t=street?`${num||''} ${street}, ${sub||''} ${ST(state)} ${pc||''}, Australia`.replace(/\s+/g,' ').replace(/^ /,'').replace(' ,',','):full;if(t&&!out.includes(t))out.push(t)};
+  try{ // Photon: finds streets while you are still typing part of the name
+   const r=await(await fetch('https://photon.komoot.io/api/?limit=10&lang=en&lat=-33.9&lon=151.15&q='+encodeURIComponent(q.replace(/^\d+[a-zA-Z]?(\s*[\/-]\s*\d+[a-zA-Z]?)?[\s,]*/,'')||q))).json();
+   (r.features||[]).map(f=>f.properties||{}).filter(x=>x.countrycode=='AU').forEach(x=>{const street=x.street||(x.osm_key=='highway'?x.name:'');if(street)add(street,x.district||x.locality||x.city,x.state,x.postcode)})
+  }catch(e){}
+  if(out.length<3){try{const r=await(await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=au&limit=6&viewbox=150.6,-33.5,151.6,-34.2&q='+encodeURIComponent(q))).json();
+   r.forEach(x=>{const a=x.address||{};a.road?add(a.road,a.suburb||a.city_district||a.town||a.city||a.village,a.state,a.postcode):add('','','','',x.display_name.replace(/, (City of|Council).*?,/,',').slice(0,120))})}catch(e){}}
+  res(out.slice(0,8))},300)});
 function suggest(inp,items){if(!inp||inp._sg)return;inp._sg=1;const box=document.createElement('div');box.className='sgb';box.hidden=true;inp.parentNode.style.position='relative';inp.parentNode.appendChild(box);let n=0;
  const go=async()=>{const m=++n,L=await items(inp.value);if(m!=n)return;box.innerHTML=L.map(x=>`<div>${esc(x)}</div>`).join('');box.hidden=!L.length};
  inp.addEventListener('input',go);inp.addEventListener('focus',go);inp.addEventListener('blur',()=>{n++;setTimeout(()=>box.hidden=true,250)});
