@@ -63,7 +63,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 @page{size:A4;margin:0}
 @media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#aPg,#aForm,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.9</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v2.0</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
 <nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button><button data-t="aPg">🏠 Assessment</button></nav>
 <section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
@@ -228,13 +228,18 @@ function build(){const SECS=[['🏠 Site & client',['Date','Address','Property #
  $('#grid').innerHTML=SECS.map(([t,l])=>`<div class="sec"><h4>${t}</h4><div class="g">${l.map(fld).join('')}</div></div>`).join('');
  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{const s=b.parentNode;if(s.dataset.m){b.classList.toggle('on');return}[...s.children].forEach(x=>x.classList.remove('on','f'));
   if(s.dataset.f=='Test Type'||s.dataset.f=='Strainer'||true)b.classList.add('on');if(b.dataset.o=='FAIL'||b.dataset.o=='Leak')b.classList.add('f')});
- document.querySelectorAll('[data-f="Meter #"],[data-f="Bypass Meter No."],[data-f="Serial #"]').forEach(i=>i.oninput=()=>{const p=i.selectionStart;i.value=i.value.toUpperCase();i.setSelectionRange(p,p)});$('[data-f=Type]').onchange=vis;suggestTests();let t;$('[data-f=Address]').oninput=e=>{return;
+ document.querySelectorAll('[data-f="Meter #"],[data-f="Bypass Meter No."],[data-f="Serial #"]').forEach(i=>i.oninput=()=>{const p=i.selectionStart;i.value=i.value.toUpperCase();i.setSelectionRange(p,p)});$('[data-f=Type]').onchange=()=>{vis();rpzChk()};$('#grid').addEventListener('input',()=>rpzChk());suggestTests();let t;$('[data-f=Address]').oninput=e=>{return;
   t=setTimeout(async()=>{try{const r=await(await fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=au&limit=5&q='+encodeURIComponent(v))).json();
    $('#dl-a').innerHTML=r.map(x=>`<option>${esc(x.display_name.replace(/, (City of|Council).*?,/,',').slice(0,120))}`).join('')}catch(e){}},500)};
  $('[data-f=Address]').onchange=e=>{const m=recs.filter(r=>r.v.Address==e.target.value).sort((a,b)=>pd(b.v.Date)-pd(a.v.Date))[0];
   if(m&&!$('[data-f="Property #"]').value){for(const k of ['Property #','Customer','Business Name','Contact Person','Phone','email'])setF(k,m.v[k])}}}
 function vis(){const t=$('[data-f=Type]').value;$('[data-w="Relief Port"]').style.display=t=='RPZ'?'':'none';
  BYP.forEach(k=>$(`[data-w="${k}"]`).style.display=t=='DCDA'?'':'none')}
+const RPZMIN={Check1:35,'Relief Port':14,Check2:7},DCMIN={Check1:7,Check2:7,'DCDA Bypass Check1':7,'DCDA Bypass Check 2':7},LBL={Check1:'Check 1',Check2:'Check 2','Relief Port':'Relief port','DCDA Bypass Check1':'Bypass check 1','DCDA Bypass Check 2':'Bypass check 2'};
+function rpzLow(v){const M=v.Type=='RPZ'?RPZMIN:(v.Type=='DCV'||v.Type=='DCDA')?DCMIN:{};
+ return Object.entries(M).filter(([k,m])=>!(v.Type=='DCV'&&/Bypass/.test(k))&&v[k]!==''&&v[k]!=null&&!isNaN(+v[k])&&+v[k]<m).map(([k,m])=>LBL[k]+' '+v[k]+' kPa (min '+m+')')}
+function rpzChk(){let d=$('#rpzw');if(!d){const t=$('[data-w="Check2"]');if(!t)return;d=document.createElement('div');d.id='rpzw';d.style.cssText='grid-column:1/-1;font-weight:600;color:var(--bad)';t.parentNode.appendChild(d)}
+ const v={};['Type','Check1','Relief Port','Check2','DCDA Bypass Check1','DCDA Bypass Check 2'].forEach(k=>v[k]=getF(k));const L=rpzLow(v);d.innerHTML=L.length?'⚠ Below minimum: '+esc(L.join(', '))+'. Should be a FAIL.':''}
 function setF(k,v){const e=$(`[data-f="${k}"]`);if(!e)return;if(e.classList.contains('seg')){[...e.children].forEach(b=>{b.classList.remove('on','f');
  if(String(v).replace(/^fire service \(.*\)$/i,'Fire service').split(',').map(x=>x.trim().toLowerCase()).includes(b.dataset.o.toLowerCase())||(k=='Strainer'&&/true/i.test(v)&&b.dataset.o=='YES')){b.classList.add('on');if(['FAIL','Leak'].includes(b.dataset.o))b.classList.add('f')}})}
  else if(e.dataset.date)e.value=toISO(v);else e.value=v??''}
@@ -242,9 +247,10 @@ function getF(k){const e=$(`[data-f="${k}"]`);if(!e)return'';if(e.classList.cont
 function open(rec,copy){cur=copy?{row:0,v:{...rec.v}}:rec;const v=cur.v;H.forEach(k=>{if(k!='Image'&&k!='Dummy')setF(k,v[k])});
  if(copy){KEEP_CLEAR.forEach(k=>{if(k!='Image')setF(k,'')});setF('Date',fd(new Date()));for(const k in gauge)setF(k,gauge[k]);cur.v.Image=''}
  if(!rec.row&&!copy){for(const k in gauge)setF(k,gauge[k]);setF('Date',fd(new Date()));setF('Test Type','Annual');setF('Strainer','YES')}
- clearImg();$('#imgn').textContent=cur.v.Image||'';vis();$('#bDel').hidden=!cur.row;show('form');scrollTo(0,0)}
+ clearImg();$('#imgn').textContent=cur.v.Image||'';vis();rpzChk();$('#bDel').hidden=!cur.row;show('form');scrollTo(0,0)}
 async function save(){say('Saving…');try{const v={};H.forEach(k=>v[k]=k=='Image'?cur.v.Image||'':k=='Dummy'?'0':(k=='Meter #'||k=='Bypass Meter No.'||k=='Serial #')?getF(k).toUpperCase():k=='Size'?getF(k).replace(/\s*mm\s*$/i,''):getF(k));
  for(const k of ['Date','Address','Property #','Type']) if(!v[k])throw Error(k+' is required');
+ {const low=rpzLow(v);if(low.length&&v.Result=='PASS'&&!confirm('Below minimum:\n'+low.join('\n')+'\n\nResult is PASS. Save anyway?')){say('');return}}
  const f=imgFile(),Q=await qAll();let it=cur.row<0?Q.find(x=>x.id==-cur.row):cur.row>0?Q.find(x=>x.row==cur.row&&x.k!='a'):null;
  if(!it)it={row:Math.max(cur.row,0),key:cur.row>0?[cur.v.Date,cur.v.Address,cur.v['Serial #']].map(z=>z??'').join('|'):''};
  it.v=v;delete it.err;if(f){it.img=f;it.imgName=`${fd(new Date()).replace(/\//g,'')}.Image.${Date.now()}.jpg`}
