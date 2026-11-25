@@ -63,7 +63,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 @page{size:A4;margin:0}
 @media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#aPg,#aForm,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.8</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v1.9</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
 <nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button><button data-t="aPg">🏠 Assessment</button></nav>
 <section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
@@ -380,17 +380,21 @@ function openSW(conn){const v={};H.forEach(k=>v[k]=getF(k));v.Image=cur.v.Image|
  const sec=(t,rows)=>`<div class="sec"><h4>${t}</h4>${rows.join('')}</div>`,note=t=>`<p class="swn">${t}</p>`;
  const isM=conn=='Sydney Water meter',isF=conn.startsWith('Fire');
  const makeRow=`<div class="swr"><span class="swl">Make (as listed in portal)</span><span class="swv"><input id="swMake" value="${esc(make)}" style="max-width:260px"><small>edit once and I remember it for ${esc(v.Brand||'this brand')}</small></span><button data-cpid="swMake">Copy</button></div>`;
- const dev=[];
+ const dev=[],ini=/initial/i.test(v['Test Type']||''),pt={RPZ:'RPZD',DCV:'DCV'}[v.Type]||v.Type||'';
+ if(ini){dev.push(note('Initial test = new device. After choosing the '+(isM?'meter':'connection')+', the portal says “no backflow devices registered” → click <b>Add a new device</b>, then fill these in order.'));
+  if(isM)dev.push(swRow('Choose a Sydney Water meter',ok?meter:'',1));
+  dev.push(swRow('New device type (RPZD / RAG / RBT / DCV)',pt,1,pt=='DCDA'?'DCDA wasn’t one of the buttons I’ve seen – tell me what the portal offers':''),swRow('Size',v.Size?mm(v.Size):'',1,'pick from the Size list'),makeRow,swRow('Model',v.Model,1),swRow('Serial number',serial,1),swRow('Device location',v.Location,1,'free text box'),note('Summary screen: check Make, Model, Serial and Location, then Next to Test details.'))}
+ else{
  if(isM)dev.push(swRow('Choose a Sydney Water meter',ok?meter:'',1));
  if(isF)dev.push(swRow('Choose a backflow device to test or replace',serial,1,'pick “Serial #…” then click <b>Test this device</b>'));
  else dev.push(swRow('What did you do on site?','Device test'),swRow('Serial number of the device you tested',serial,1));
- dev.push(swRow('Backflow device location',v.Location,1,'portal shows e.g. “At meter” – use Edit location'),swRow('Backflow device model',v.Model,1,'use Edit model'),makeRow);
+ dev.push(swRow('Backflow device location',v.Location,1,'portal shows e.g. “At meter” – use Edit location'),swRow('Backflow device model',v.Model,1,'use Edit model'),makeRow);}
  $('#sw').innerHTML=
  sec('1 · Property',[swRow('Property number',v['Property #'],1),swRow('Address (check portal matches)',(v.Address||'').split(',').slice(0,2).join(','))])+
  sec('2 · Site contact details',[swRow('First name',fn,1),swRow('Last name',ln,1),swRow('Phone',v.Phone,1),swRow('Email (optional)',v.email),swRow('Company name/position (optional)',biz)])+
  sec('3 · Test — Connection type',[`<div class="swr"><span class="swl">Connection type</span><span class="swv"><select id="swConn">${['Sydney Water meter','Boundary connection','Fire service'].map(o=>`<option${o==conn?' selected':''}>${o}</option>`).join('')}</select></span></div>`,
   note(isM?'Next, the portal asks you to choose the Sydney Water meter.':isF?'Portal: “There is 1 Fire Service connection on this property” – click Next, then choose the device.':'Choosing boundary means the device is <b>before/upstream</b> of the Sydney Water meters onsite.')])+
- sec('3 · Test — Device',dev)+
+ sec(ini?'3 · Test — New device (Initial test)':'3 · Test — Device',dev)+
  sec('3 · Test — Test details',[swRow('Date tested',v.Date,1,age>30?'⚠ portal rejects tests more than 30 days old ('+age+' days)':''),swRow('Test result',v.Result=='PASS'?'Pass':v.Result=='FAIL'?'Fail':'',1),
   `<div class="swr"><span class="swl">Declarations</span><span class="swv">Tick both boxes.<small>${v.Image||imgFile()?'✔ photo saved on this test':'⚠ no photo on this test – evidence must show your gauge attached and the serial number'}</small></span></div>`])+
  sec('4 · Review – check the preview matches',[...(isM?[swRow('Meter number',ok?meter:'')]:[]),swRow('Size',v.Size?mm(v.Size):''),swRow('Device type',v.Type),swRow('Testing gauge make',v.Gauge),swRow('Gauge serial number',v.GaugeSerial),swRow('Date last calibrated',v.GaugeDateTested),swRow('Licence number',CFG.lic),swRow('Trading name',CFG.name),swRow('Contact number',(CFG.mobile||'').replace(/\s/g,'')),swRow('Name',CFG.person)])+
