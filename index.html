@@ -63,7 +63,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 @page{size:A4;margin:0}
 @media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#aPg,#aForm,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v2.1</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v2.2</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
 <nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button><button data-t="aPg">🏠 Assessment</button></nav>
 <section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
@@ -279,11 +279,10 @@ function report(){repFrom='list';const v0={};H.forEach(k=>v0[k]=k=='Image'?(cur.
  const e=esc,kp=x=>x===''||x==null?'':e(x)+'kPa',pr=x=>x===''||x==null?'':(+x).toFixed(2)+' kPa';
  $('#rep').innerHTML=set.map(r=>{const v=r.v,rpz=v.Type=='RPZ';return `<div class="cert">
  <div class="hd"><img class="l" src="sydneywater.svg" onerror="this.style.visibility='hidden'"><div><b><i><u>${e(CFG.name)}</u></i></b><br>Accredited Backflow Plumber<br>Mobile: ${e(CFG.mobile)}<br>Email: <u style="color:#1155cc">${e(CFG.email)}</u></div><img class="r" src="logo.png" onerror="this.style.visibility='hidden'"></div>
- <h3>Backflow Test Certificate</h3>
+ <div style="position:relative"><h3>Backflow Test Certificate</h3>${v['Receipt #']&&!(/zone|individual/i.test(v['Device Purpose'])&&!/containment/i.test(v['Device Purpose']))?`<div style="position:absolute;right:0;top:50%;transform:translateY(-50%);border:2px solid #000;padding:4px 10px;font-weight:700;font-size:13px">Receipt No. ${e(v['Receipt #'])}</div>`:''}</div>
  <table class="t"><tr><th>Date</th><td>${e(v.Date)}</td><th>Property #</th><td>${e(v['Property #'])}</td></tr>
  <tr><th>Address</th><td colspan=3>${e(v.Address)}</td></tr>
- ${v['Receipt #']&&!(/zone|individual/i.test(v['Device Purpose'])&&!/containment/i.test(v['Device Purpose']))?`<tr><th>Sydney Water receipt no.</th><td colspan=3><b>${e(v['Receipt #'])}</b></td></tr>`:''}
- <tr><th>Business Name</th><td>${e(v['Business Name']=='N/a'?'':v['Business Name'])}</td><th>Contact Person</th><td>${e(v['Contact Person'])}</td></tr>
+  <tr><th>Business Name</th><td>${e(v['Business Name']=='N/a'?'':v['Business Name'])}</td><th>Contact Person</th><td>${e(v['Contact Person'])}</td></tr>
  <tr><th>Phone</th><td>${e(v.Phone)}</td><th>Email</th><td>${e(v.email)}</td></tr></table>
  <table class="t"><tr><th>Test Type</th><td>${e(v['Test Type'])}</td><th>Device Purpose</th><td>${e(v['Device Purpose'])}</td></tr>
  <tr><th>Device Location</th><td>${e(v.Location)}</td><th>Device Use</th><td>${e(v['Device Use'])}</td></tr>
