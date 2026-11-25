@@ -63,7 +63,7 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 @page{size:A4;margin:0}
 @media print{header,.bar,.tabs,#tabs,#list,#form,#due,#clients,#cform,#mapPg,#gaugePg,#histPg,#swPg,#fillPg,#aPg,#aForm,#toast{display:none!important}body{background:#fff}main{padding:0;max-width:none}#rep{padding:14mm}}
 </style></head><body>
-<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v2.0</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
+<header><span class="chip"><img src="logo.png" alt=""></span><div class="brand"><h1>Colin Bell Plumbing</h1><small>Backflow Testing · v2.1</small></div><span id="msg"></span><button id="bPend" hidden></button><button id="bSet">Settings</button><button id="bIn" class="p">Sign in</button><span class="chip sw"><img src="sydneywater.svg" alt=""></span></header>
 <main>
 <nav class="tabs" id="tabs"><button data-t="list" class="on">📋 Tests</button><button data-t="due">⏰ Due for retest <span id="dueN" class="badge"></span></button><button data-t="clients">👥 Clients</button><button data-t="mapPg">🗺 Map</button><button data-t="gaugePg">🧪 Gauge</button><button data-t="aPg">🏠 Assessment</button></nav>
 <section id="list"><div class="stats" id="stats"></div><div class="bar"><input id="q" placeholder="Search address, customer, serial…"><button id="bNew" class="p">+ New test</button><button id="bRef">Refresh</button></div>
@@ -91,10 +91,10 @@ input,select,textarea,button{font-size:16px;padding:10px}#form .bar{top:0}#mapbo
 <datalist id="dl-b"></datalist><datalist id="dl-a"></datalist>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-const H=['Date','Address','Property #','Device Use','Customer','Business Name','Contact Person','Phone','email','Test Type','Location','Device Purpose','Type','Brand','Model','Size','Strainer','Serial #','Meter #','Inlet Pressure','Downstream isolating valve','Check1','Relief Port','Check2','Bypass Meter No.','Bypass DCV Brand','DCDA Bypass Check1','DCDA Bypass Check 2','Notes','Image','Result','Gauge','GaugeSerial','GaugeDateTested','Dummy','Connection Type'];
+const H=['Date','Address','Property #','Device Use','Customer','Business Name','Contact Person','Phone','email','Test Type','Location','Device Purpose','Type','Brand','Model','Size','Strainer','Serial #','Meter #','Inlet Pressure','Downstream isolating valve','Check1','Relief Port','Check2','Bypass Meter No.','Bypass DCV Brand','DCDA Bypass Check1','DCDA Bypass Check 2','Notes','Image','Result','Gauge','GaugeSerial','GaugeDateTested','Dummy','Connection Type','Receipt #'];
 const SEG={'Connection Type':['Sydney Water meter','Boundary connection','Fire service'],'Test Type':['Annual','Initial'],'Device Purpose':['Containment','Zone','Individual'],'Strainer':['YES','NO'],'Downstream isolating valve':['Tight','Leak'],'Result':['PASS','FAIL']};
 const NUM=['Inlet Pressure','Check1','Relief Port','Check2','Size'],BYP=['Bypass Meter No.','Bypass DCV Brand','DCDA Bypass Check1','DCDA Bypass Check 2'];
-const KEEP_CLEAR=['Check1','Relief Port','Check2','Result','Image','Notes',...BYP.slice(2)];
+const KEEP_CLEAR=['Receipt #','Check1','Relief Port','Check2','Result','Image','Notes',...BYP.slice(2)];
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const CFG=Object.assign({client:'',sheet:'1XkN0CMENx6NrXW1YBboLPpSo6ygzoc48237ADaCtB90',clients:'1mUFKVtjiIR5W3V2B6Fdza9a89yrKoa4MgTK8zuGKpFk',assess:'1Xb4Dn-9okhNy8kBswHYu1vVNTX0JNAcZFBkAzlDnEzE',folder:'1QJWIE2SJYwSTVA7f_hfnwCUu7Qj4_tpW',imgdir:'Backflow 3_Images',
  name:'Colin Bell Plumbing',lic:'33705C',person:'Colin Bell',mobile:'0412 619516',email:'colinbellplumbing@gmail.com'},JSON.parse(localStorage.getItem('bf_cfg')||'{}'));
@@ -160,7 +160,7 @@ async function sync(){if(syncing){again=true;return}syncing=true;let done=0,why=
     if(it.img){const n=it.imgName||`${fd(new Date()).replace(/\//g,'')}.Image.${Date.now()}.jpg`,b='bfb'+Date.now();
      const body=new Blob([`--${b}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify({name:n,parents:[CFG.folder]})}\r\n--${b}\r\nContent-Type: ${it.img.type||'image/jpeg'}\r\n\r\n`,it.img,`\r\n--${b}--`]);
      await api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body});it.v.Image=`${CFG.imgdir}/${n}`;it.img=null;await qPut(it)}
-    const T=it.k=='a'?{id:CFG.assess,cols:AH,last:'W',kf:['Property Address','Date','Property No.']}:{id:CFG.sheet,cols:H,last:'AJ',kf:['Date','Address','Serial #']};const row=[T.cols.map(k=>it.v[k]??'')];
+    const T=it.k=='a'?{id:CFG.assess,cols:AH,last:'W',kf:['Property Address','Date','Property No.']}:{id:CFG.sheet,cols:H,last:'AK',kf:['Date','Address','Serial #']};const row=[T.cols.map(k=>it.v[k]??'')];
     if(it.row>0){
      if(it.key){const g=await api(`${S}${T.id}/values/Sheet1!A${it.row}:${T.last}${it.row}`),x=(g.values||[[]])[0]||[];
       const k=T.kf.map(f=>x[T.cols.indexOf(f)]).map(z=>z??'').join('|');
@@ -175,7 +175,7 @@ async function sync(){if(syncing){again=true;return}syncing=true;let done=0,why=
  else if(why)say(why=='offline'?'Offline – will sync when you have signal':why);
  if(again){again=false;return sync()}}
 async function load(){say('Loading…');try{
- const d=await api(`${S}${CFG.sheet}/values/Sheet1!A1:AJ?valueRenderOption=FORMATTED_VALUE`);
+ const d=await api(`${S}${CFG.sheet}/values/Sheet1!A1:AK?valueRenderOption=FORMATTED_VALUE`);
  recs=d.values.slice(1).map((r,i)=>({row:i+2,v:Object.fromEntries(H.map((h,j)=>[h,r[j]??'']))})).filter(r=>r.v.Address||r.v.Date);
  try{const g=await api(`${S}${CFG.sheet}/values/Gauge!A2:C2`);const x=g.values[0];gauge={Gauge:x[0],GaugeSerial:x[1],GaugeDateTested:y4(x[2])}}catch(e){}
  cacheSave();await overlay();
@@ -216,7 +216,7 @@ function drawDue(){const L=dueList(+$('#dueWin').value,$('#dueOld').checked);
  $('#dueRows').innerHTML=L.map(({r,due,left})=>{const v=r.v,f=v.Result=='FAIL';
   const st=f?'<span class="pill fail">FAILED – retest</span>':left<0?`<span class="pill fail">${-left} days overdue</span>`:left<=30?`<span class="pill amb">due in ${left} days</span>`:`<span class="pill blu">due in ${left} days</span>`;
   return `<tr data-r="${r.row}"><td>${f?"ASAP":fd(due)}<td>${st}<td>${esc(v.Address)}<td>${esc(v['Device Use'])}<td>${esc((v['Serial #']||'').toUpperCase())}<td>${esc([v['Business Name']!='N/a'?v['Business Name']:v.Customer,v['Contact Person'],v.Phone].filter(Boolean).join(' · '))}<td style="white-space:nowrap"><a class="btn" target="_blank" rel="noopener" href="${mailLink(r)}">✉ Email</a> <button data-hist="${r.row}">History</button> <button class="p" data-retest="${r.row}">Retest</button>`}).join('')}
-function build(){const SECS=[['🏠 Site & client',['Date','Address','Property #','Customer','Business Name','Contact Person','Phone','email']],['🔧 Device',['Connection Type','Test Type','Device Purpose','Location','Device Use','Type','Brand','Model','Size','Strainer','Serial #','Meter #','Bypass Meter No.','Bypass DCV Brand']],['📈 Test readings',['Inlet Pressure','Downstream isolating valve','Check1','Relief Port','Check2','DCDA Bypass Check1','DCDA Bypass Check 2']],['✅ Result & photo',['Result','Notes','Image']],['🧪 Test gauge',['Gauge','GaugeSerial','GaugeDateTested']]];
+function build(){const SECS=[['🏠 Site & client',['Date','Address','Property #','Customer','Business Name','Contact Person','Phone','email']],['🔧 Device',['Connection Type','Test Type','Device Purpose','Location','Device Use','Type','Brand','Model','Size','Strainer','Serial #','Meter #','Bypass Meter No.','Bypass DCV Brand']],['📈 Test readings',['Inlet Pressure','Downstream isolating valve','Check1','Relief Port','Check2','DCDA Bypass Check1','DCDA Bypass Check 2']],['✅ Result & photo',['Result','Receipt #','Notes','Image']],['🧪 Test gauge',['Gauge','GaugeSerial','GaugeDateTested']]];
  const fld=h=>{let i;
  if(SEG[h])i=`<div class="seg" data-f="${h}" ${h=='Device Purpose'?'data-m=1':''}>${SEG[h].map(o=>`<button type="button" data-o="${o}">${o}</button>`).join('')}</div>`;
  else if(h=='Type')i=`<select data-f="${h}">${['RPZ','DCV','DCDA','PVB','SVB'].map(o=>`<option>${o}`).join('')}</select>`;
@@ -226,14 +226,14 @@ function build(){const SECS=[['🏠 Site & client',['Date','Address','Property #
  else i=`<input data-f="${h}" ${NUM.includes(h)&&h!='Size'?'type="number" step="any"':''} ${h=='Brand'||h=='Bypass DCV Brand'?'class="dd" autocomplete="off"':''} ${h=='Address'?'autocomplete="off"':''}>`;
  return `<div class="${['Address','Notes','Device Purpose','Connection Type'].includes(h)?'w2':''}" data-w="${h}"><label>${h}</label>${i}</div>`};
  $('#grid').innerHTML=SECS.map(([t,l])=>`<div class="sec"><h4>${t}</h4><div class="g">${l.map(fld).join('')}</div></div>`).join('');
- document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{const s=b.parentNode;if(s.dataset.m){b.classList.toggle('on');return}[...s.children].forEach(x=>x.classList.remove('on','f'));
-  if(s.dataset.f=='Test Type'||s.dataset.f=='Strainer'||true)b.classList.add('on');if(b.dataset.o=='FAIL'||b.dataset.o=='Leak')b.classList.add('f')});
+ document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{const s=b.parentNode;if(s.dataset.m){b.classList.toggle('on');vis();return}[...s.children].forEach(x=>x.classList.remove('on','f'));
+  if(s.dataset.f=='Test Type'||s.dataset.f=='Strainer'||true)b.classList.add('on');if(b.dataset.o=='FAIL'||b.dataset.o=='Leak')b.classList.add('f');vis()});
  document.querySelectorAll('[data-f="Meter #"],[data-f="Bypass Meter No."],[data-f="Serial #"]').forEach(i=>i.oninput=()=>{const p=i.selectionStart;i.value=i.value.toUpperCase();i.setSelectionRange(p,p)});$('[data-f=Type]').onchange=()=>{vis();rpzChk()};$('#grid').addEventListener('input',()=>rpzChk());suggestTests();let t;$('[data-f=Address]').oninput=e=>{return;
   t=setTimeout(async()=>{try{const r=await(await fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=au&limit=5&q='+encodeURIComponent(v))).json();
    $('#dl-a').innerHTML=r.map(x=>`<option>${esc(x.display_name.replace(/, (City of|Council).*?,/,',').slice(0,120))}`).join('')}catch(e){}},500)};
  $('[data-f=Address]').onchange=e=>{const m=recs.filter(r=>r.v.Address==e.target.value).sort((a,b)=>pd(b.v.Date)-pd(a.v.Date))[0];
   if(m&&!$('[data-f="Property #"]').value){for(const k of ['Property #','Customer','Business Name','Contact Person','Phone','email'])setF(k,m.v[k])}}}
-function vis(){const t=$('[data-f=Type]').value;$('[data-w="Relief Port"]').style.display=t=='RPZ'?'':'none';
+function vis(){const t=$('[data-f=Type]').value;{const pu=getF('Device Purpose'),z=/zone|individual/i.test(pu)&&!/containment/i.test(pu);$('[data-w="Receipt #"]').style.display=z?'none':''}$('[data-w="Relief Port"]').style.display=t=='RPZ'?'':'none';
  BYP.forEach(k=>$(`[data-w="${k}"]`).style.display=t=='DCDA'?'':'none')}
 const RPZMIN={Check1:35,'Relief Port':14,Check2:7},DCMIN={Check1:7,Check2:7,'DCDA Bypass Check1':7,'DCDA Bypass Check 2':7},LBL={Check1:'Check 1',Check2:'Check 2','Relief Port':'Relief port','DCDA Bypass Check1':'Bypass check 1','DCDA Bypass Check 2':'Bypass check 2'};
 function rpzLow(v){const M=v.Type=='RPZ'?RPZMIN:(v.Type=='DCV'||v.Type=='DCDA')?DCMIN:{};
@@ -282,6 +282,7 @@ function report(){repFrom='list';const v0={};H.forEach(k=>v0[k]=k=='Image'?(cur.
  <h3>Backflow Test Certificate</h3>
  <table class="t"><tr><th>Date</th><td>${e(v.Date)}</td><th>Property #</th><td>${e(v['Property #'])}</td></tr>
  <tr><th>Address</th><td colspan=3>${e(v.Address)}</td></tr>
+ ${v['Receipt #']&&!(/zone|individual/i.test(v['Device Purpose'])&&!/containment/i.test(v['Device Purpose']))?`<tr><th>Sydney Water receipt no.</th><td colspan=3><b>${e(v['Receipt #'])}</b></td></tr>`:''}
  <tr><th>Business Name</th><td>${e(v['Business Name']=='N/a'?'':v['Business Name'])}</td><th>Contact Person</th><td>${e(v['Contact Person'])}</td></tr>
  <tr><th>Phone</th><td>${e(v.Phone)}</td><th>Email</th><td>${e(v.email)}</td></tr></table>
  <table class="t"><tr><th>Test Type</th><td>${e(v['Test Type'])}</td><th>Device Purpose</th><td>${e(v['Device Purpose'])}</td></tr>
